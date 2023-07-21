@@ -24,9 +24,10 @@ const HarmonicExplorer = () => {
     setHarmonics(updatedHarmonics);
   };
 
-  const removeHarmonic = (index) => {
+  const removeLastHarmonic = () => {
     const updatedHarmonics = [...harmonics];
-    updatedHarmonics.splice(index, 1);
+    const lastHarmonic = updatedHarmonics.length - 1
+    updatedHarmonics.splice(lastHarmonic, 1);
     setHarmonics(updatedHarmonics);
   };
 
@@ -95,64 +96,19 @@ const HarmonicExplorer = () => {
   });
 
   return (
-    <div>
-      <h1>Harmonic Explorer</h1>
-      <div>
-        <label htmlFor="fundamentalFreq">Fundamental Frequency (Hz):</label>
-        <input
-          type="number"
-          id="fundamentalFreq"
-          value={fundamentalFreq}
-          onChange={changeFundamentalFrequency}
-        />
-      </div>
-      <div>
-        <h2>Harmonics:</h2>
-        <button onClick={addHarmonic}>Add Harmonic</button>
-        <ul>
-          {harmonics.map((harmonic, index) => (
-            <li key={harmonic.harmonic}>
-              <div>{`Harmonic ${harmonic.harmonic}: ${fundamentalFreq * harmonic.harmonic} Hz`} </div>
-              <div>
-                <label htmlFor={`amplitude-${harmonic.harmonic}`}>
-                  Amplitude (0-1):
-                </label>
-                <input
-                  type="number"
-                  id={`amplitude-${harmonic.harmonic}`}
-                  value={harmonic.amplitude}
-                  step={0.01}
-                  min={0}
-                  max={1}
-                  onChange={(e) =>
-                    changeAmplitude(index, parseFloat(e.target.value))
-                  }
-                />
-              </div>
-              <div>
-                <label htmlFor={`phase-${harmonic.harmonic}`}>
-                  Phase Angle (degrees):
-                </label>
-                <input
-                  type="number"
-                  id={`phase-${harmonic.harmonic}`}
-                  value={(harmonic.phaseAngle * 180) / Math.PI}
-                  step={0.1}
-                  onChange={(e) =>
-                    changePhaseAngle(index, parseFloat(e.target.value))
-                  }
-                />
-              </div>
-              <button onClick={() => removeHarmonic(index)}>
-                Remove Harmonic
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      
-      <div>
-        <h2>Combined Signal:</h2>
+    <div style={{ display: "flex" }}>
+      <div style={{ flex: 1, marginRight: "20px", marginLeft: "50px" }}>
+        <h1>Harmonic Explorer</h1>
+        <div>
+          <label htmlFor="fundamentalFreq">Fundamental Frequency (Hz):</label>
+          <input
+            type="number"
+            id="fundamentalFreq"
+            value={fundamentalFreq}
+            onChange={changeFundamentalFrequency}
+            style={{ maxWidth: "50px" }}
+          />
+        </div>
         <div>
           <label htmlFor="cycles">Number of Cycles:</label>
           <input
@@ -160,8 +116,70 @@ const HarmonicExplorer = () => {
             id="cycles"
             value={cycles}
             onChange={changeCycles}
+            style={{ maxWidth: "50px" }}
           />
         </div>
+        <div>
+          <h2>Harmonics:</h2>
+          <div style={{ display: "flex" }}>
+            <div style={{ flex: 1 }}>
+              <button onClick={addHarmonic}>Add Harmonic</button>
+            </div>
+  
+            <div style={{ flex: 1 }}>
+              <button onClick={() => removeLastHarmonic()}>
+                Remove Last Harmonic
+              </button>
+            </div>
+          </div>
+  
+          <ul>
+            {harmonics.map((harmonic, index) => (
+              <li key={harmonic.harmonic}>
+                <div>{`Harmonic ${harmonic.harmonic}: ${
+                  fundamentalFreq * harmonic.harmonic
+                } Hz`}</div>
+                <div>
+                  <label htmlFor={`amplitude-${harmonic.harmonic}`}>
+                    Amplitude:
+                  </label>
+                  <input
+                    type="number"
+                    id={`amplitude-${harmonic.harmonic}`}
+                    value={harmonic.amplitude}
+                    step={0.01}
+                    min={0}
+                    
+                    onChange={(e) =>
+                      changeAmplitude(index, parseFloat(e.target.value))
+                    }
+                    style={{ maxWidth: "50px" }}
+                  />
+                </div>
+                <div>
+                  <label htmlFor={`phase-${harmonic.harmonic}`}>
+                    Phase Angle (degrees):
+                  </label>
+                  <input
+                    type="number"
+                    id={`phase-${harmonic.harmonic}`}
+                    value={(harmonic.phaseAngle * 180) / Math.PI}
+                    step={0.1}
+                    min={0}
+                    max={360}
+                    onChange={(e) =>
+                      changePhaseAngle(index, parseFloat(e.target.value))
+                    }
+                    style={{ maxWidth: "50px" }}
+                  />
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+  
+      <div style={{ flex: 1 }}>
         <Plot
           data={[
             {
@@ -172,9 +190,11 @@ const HarmonicExplorer = () => {
             },
           ]}
           layout={{
-            ...layout,
+            width: 1000,
+            height: 500,
+            title: "Combined Signal",
             xaxis: {
-              title: "Time (seconds)", 
+              title: "Time (seconds)",
             },
             yaxis: {
               title: "Amplitude",
@@ -184,6 +204,7 @@ const HarmonicExplorer = () => {
       </div>
     </div>
   );
+  
 };
 
 export default HarmonicExplorer;
