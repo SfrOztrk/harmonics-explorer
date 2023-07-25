@@ -26,7 +26,7 @@ const HarmonicExplorer = () => {
 
   const removeLastHarmonic = () => {
     const updatedHarmonics = [...harmonics];
-    const lastHarmonic = updatedHarmonics.length - 1
+    const lastHarmonic = updatedHarmonics.length - 1;
     updatedHarmonics.splice(lastHarmonic, 1);
     setHarmonics(updatedHarmonics);
   };
@@ -42,6 +42,13 @@ const HarmonicExplorer = () => {
   const changeCycles = (e) => {
     setCycles(e.target.value);
   };
+
+  useEffect(() => {
+    if (fundamentalFreq === 0) {
+      alert("Frequency can not be 0. Frequency value set to 440");
+      setFundamentalFreq(440);
+    }
+  });
 
   const combinedSignal = () => {
     const time = [];
@@ -70,18 +77,20 @@ const HarmonicExplorer = () => {
   };
 
   useEffect(() => {
-    const combined = combinedSignal();
-    setCombinedSignalData(combined);
+    if (fundamentalFreq !== 0 && cycles > 0) {
+      const combined = combinedSignal();
+      setCombinedSignalData(combined);
 
-    const maxSignalValue = Math.max(...combined.signal);
-    const minSignalValue = Math.min(...combined.signal);
+      const maxSignalValue = Math.max(...combined.signal);
+      const minSignalValue = Math.min(...combined.signal);
 
-    setLayout({
-      ...layout,
-      yaxis: {
-        range: [minSignalValue - 1, maxSignalValue + 1],
-      },
-    });
+      setLayout({
+        ...layout,
+        yaxis: {
+          range: [minSignalValue - 1, maxSignalValue + 1],
+        },
+      });
+    }
   }, [fundamentalFreq, harmonics, cycles]);
 
   const [combinedSignalData, setCombinedSignalData] = useState({
@@ -94,6 +103,45 @@ const HarmonicExplorer = () => {
     title: "Combined Signal",
     yaxis: {},
   });
+
+  const getQueryParam = (queryParam) => {
+    const urlSearchParams = new URLSearchParams(window.location.search);
+    return urlSearchParams.get(queryParam);
+  };
+
+  useEffect(() => {
+    const freq = parseFloat(getQueryParam("freq")) || 440;
+    setFundamentalFreq(freq);
+
+    const cycleCount = parseFloat(getQueryParam("cycle")) || 5;
+    setCycles(cycleCount);
+
+    const harmonicCount = parseFloat(getQueryParam("harmonic_number")) || 1;
+    if (harmonicCount > 0) {
+      const updatedHarmonics = [];
+      for (let i = 1; i <= harmonicCount; i++) {
+        const amplitude = parseFloat(getQueryParam(`amp${i}`)) || 1;
+        const phaseAngle = parseFloat(getQueryParam(`pa${i}`)) || 0;
+        updatedHarmonics.push({ harmonic: i, amplitude, phaseAngle });
+      }
+      setHarmonics(updatedHarmonics);
+    }
+  }, []);
+
+  useEffect(() => {
+    const newUrlSearchParams = new URLSearchParams();
+
+    newUrlSearchParams.set("freq", fundamentalFreq.toString());
+    newUrlSearchParams.set("cycle", cycles.toString());
+    newUrlSearchParams.set("harmonic_number", harmonics.length.toString());
+
+    harmonics.forEach((harmonic, index) => {
+      newUrlSearchParams.set(`amp${index + 1}`, harmonic.amplitude.toString());
+      newUrlSearchParams.set(`pa${index + 1}`, harmonic.phaseAngle.toString());
+    });
+
+    window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
+  }, [fundamentalFreq, harmonics, cycles]);
 
   return (
     <div style={{ display: "flex" }}>
@@ -125,14 +173,14 @@ const HarmonicExplorer = () => {
             <div style={{ flex: 1 }}>
               <button onClick={addHarmonic}>Add Harmonic</button>
             </div>
-  
+
             <div style={{ flex: 1 }}>
               <button onClick={() => removeLastHarmonic()}>
                 Remove Last Harmonic
               </button>
             </div>
           </div>
-  
+
           <ul>
             {harmonics.map((harmonic, index) => (
               <li key={harmonic.harmonic}>
@@ -149,7 +197,6 @@ const HarmonicExplorer = () => {
                     value={harmonic.amplitude}
                     step={0.01}
                     min={0}
-                    
                     onChange={(e) =>
                       changeAmplitude(index, parseFloat(e.target.value))
                     }
@@ -178,7 +225,7 @@ const HarmonicExplorer = () => {
           </ul>
         </div>
       </div>
-  
+
       <div style={{ flex: 1 }}>
         <Plot
           data={[
@@ -204,7 +251,6 @@ const HarmonicExplorer = () => {
       </div>
     </div>
   );
-  
 };
 
 export default HarmonicExplorer;
