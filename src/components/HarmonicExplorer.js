@@ -3,11 +3,11 @@ import Plot from "react-plotly.js";
 import { TextField, Button, Grid, Typography, Box } from "@mui/material";
 
 const HarmonicExplorer = () => {
-  const [fundamentalFreq, setFundamentalFreq] = useState(440);
+  const [fundamentalFreq, setFundamentalFreq] = useState(50);
   const [harmonics, setHarmonics] = useState([
     { harmonic: 1, amplitude: 1, phaseAngle: 0 },
   ]);
-  const [cycles, setCycles] = useState(4);
+  const [cycles, setCycles] = useState(5);
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
@@ -53,7 +53,7 @@ const HarmonicExplorer = () => {
 
     const numSamples = sampleRate * duration;
 
-    for (let i = 0; i < numSamples; i++) {
+    for (let i = 0; i <= numSamples; i++) {
       const t = i / sampleRate;
       let y = 0;
 
@@ -63,6 +63,8 @@ const HarmonicExplorer = () => {
         const phase = harmonic.phaseAngle;
         y += amplitude * Math.sin(2 * Math.PI * frequency * t + phase);
       });
+
+      console.log(t, ", ", y);
 
       time.push(t);
       signal.push(y);
@@ -76,8 +78,20 @@ const HarmonicExplorer = () => {
       const combined = combinedSignal();
       setCombinedSignalData(combined);
 
-      const maxSignalValue = Math.max(...combined.signal);
-      const minSignalValue = Math.min(...combined.signal);
+      // const maxSignalValue = Math.max(...combined.signal);
+      // const minSignalValue = Math.min(...combined.signal);
+
+      let maxSignalValue = Infinity;
+      let minSignalValue = -Infinity;
+
+      combined.signal.forEach((value) => {
+        if (value > maxSignalValue) {
+          maxSignalValue = value;
+        }
+        if (value < minSignalValue) {
+          minSignalValue = value;
+        }
+      });
 
       setLayout({
         ...layout,
@@ -86,8 +100,14 @@ const HarmonicExplorer = () => {
         },
       });
     } else {
-      alert("Fundamental Frequency should be a non-zero number.");
-      setFundamentalFreq(440);
+      if (fundamentalFreq == 0) {
+        alert("Fundamental Frequency should be a positive number.");
+      }
+      if (cycles <= 0) {
+        alert("Number of Cycles should be a positive number.");
+      }
+      setFundamentalFreq(50);
+      setCycles(5);
     }
   }, [fundamentalFreq, harmonics, cycles]);
 
@@ -108,10 +128,10 @@ const HarmonicExplorer = () => {
   };
 
   useEffect(() => {
-    const freq = parseFloat(getQueryParam("freq")) || 440;
+    const freq = parseFloat(getQueryParam("freq")) || 50;
     setFundamentalFreq(freq);
 
-    const cycleCount = parseFloat(getQueryParam("cycle")) || 4;
+    const cycleCount = parseFloat(getQueryParam("cycle")) || 5;
     setCycles(cycleCount);
 
     const harmonicCount = parseFloat(getQueryParam("harmonics")) || 1;
