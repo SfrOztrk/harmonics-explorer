@@ -25,11 +25,8 @@ const HarmonicExplorer = () => {
     setHarmonics(updatedHarmonics);
   };
 
-  const removeLastHarmonic = () => {
-    const updatedHarmonics = [...harmonics];
-    const lastHarmonic = updatedHarmonics.length - 1;
-    updatedHarmonics.splice(lastHarmonic, 1);
-    setHarmonics(updatedHarmonics);
+  const changeCycles = (e) => {
+    setCycles(e.target.value);
   };
 
   const addHarmonic = () => {
@@ -40,8 +37,11 @@ const HarmonicExplorer = () => {
     ]);
   };
 
-  const changeCycles = (e) => {
-    setCycles(e.target.value);
+  const removeLastHarmonic = () => {
+    const updatedHarmonics = [...harmonics];
+    const lastHarmonic = updatedHarmonics.length - 1;
+    updatedHarmonics.splice(lastHarmonic, 1);
+    setHarmonics(updatedHarmonics);
   };
 
   const combinedSignal = () => {
@@ -64,8 +64,6 @@ const HarmonicExplorer = () => {
         y += amplitude * Math.sin(2 * Math.PI * frequency * t + phase);
       });
 
-      console.log(t, ", ", y);
-
       time.push(t);
       signal.push(y);
     }
@@ -73,54 +71,119 @@ const HarmonicExplorer = () => {
     return { time, signal };
   };
 
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+
+  const updateWindowDimensions = () => {
+    setWindowSize({
+      width: window.innerWidth,
+      height: window.innerHeight,
+    });
+  };
+
   useEffect(() => {
-    if (fundamentalFreq != 0 && cycles > 0) {
-      const combined = combinedSignal();
-      setCombinedSignalData(combined);
+    window.addEventListener("resize", updateWindowDimensions);
 
-      // const maxSignalValue = Math.max(...combined.signal);
-      // const minSignalValue = Math.min(...combined.signal);
+    return () => {
+      window.removeEventListener("resize", updateWindowDimensions);
+    };
+  }, []);
 
-      let maxSignalValue = Infinity;
-      let minSignalValue = -Infinity;
+  const calculatePeeks = (signal) => {
+    let maxSignalValue = -Infinity;
+    let minSignalValue = Infinity;
 
-      combined.signal.forEach((value) => {
-        if (value > maxSignalValue) {
-          maxSignalValue = value;
-        }
-        if (value < minSignalValue) {
-          minSignalValue = value;
-        }
-      });
-
-      setLayout({
-        ...layout,
-        yaxis: {
-          range: [minSignalValue - 1, maxSignalValue + 1],
-        },
-      });
-    } else {
-      if (fundamentalFreq == 0) {
-        alert("Fundamental Frequency should be a positive number.");
+    signal.forEach((value) => {
+      if (value > maxSignalValue) {
+        maxSignalValue = value;
       }
-      if (cycles <= 0) {
-        alert("Number of Cycles should be a positive number.");
+      if (value < minSignalValue) {
+        minSignalValue = value;
       }
-      setFundamentalFreq(50);
-      setCycles(5);
-    }
-  }, [fundamentalFreq, harmonics, cycles]);
+    });
+
+    return { minSignalValue, maxSignalValue };
+  };
+
+  const [rms, setRms] = useState(0);
+  const [peekToPeek, setPeekToPeek] = useState(0);
+
+  const calculateRMS = (signal) => {
+    const length = signal.length;
+    let sum = 0;
+
+    signal.forEach((value) => {
+      sum += Math.pow(value, 2);
+    });
+
+    const rms = Math.sqrt(sum / length);
+
+    return rms;
+  };
+
+  const calculatePeekToPeek = (signal) => {
+    const peeks = calculatePeeks(signal);
+
+    const min = peeks.minSignalValue;
+    const max = peeks.maxSignalValue;
+
+    const pp = max - min;
+
+    return pp;
+  };
 
   const [combinedSignalData, setCombinedSignalData] = useState({
     time: [],
     signal: [],
   });
+
   const [layout, setLayout] = useState({
-    width: 600,
-    height: 300,
+    width: windowSize.width * 0.6,
+    height: windowSize.height * 0.8,
     title: "Combined Signal",
-    yaxis: {},
+    xaxis: {
+      title: "Time (seconds)",
+    },
+    yaxis: {
+      title: "Amplitude",
+      range: [0, 0],
+    },
+    autosize: true,
   });
+
+  useEffect(() => {
+    if (fundamentalFreq != 0 && cycles > 0) {
+      const combined = combinedSignal();
+      setCombinedSignalData(combined);
+
+      const rmsValue = calculateRMS(combined.signal);
+      setRms(rmsValue);
+
+      const ppValue = calculatePeekToPeek(combined.signal);
+      setPeekToPeek(ppValue);
+
+      const peeks = calculatePeeks(combined.signal);
+
+      setLayout({
+        ...layout,
+        yaxis: {
+          title: "Amplitude",
+          range: [peeks.minSignalValue - 0.5, peeks.maxSignalValue + 0.5],
+        },
+      });
+    } else {
+      if (fundamentalFreq == 0) {
+        alert("Fundamental Frequency should be a positive number.");
+        setFundamentalFreq(50);
+      }
+      if (cycles <= 0) {
+        alert("Number of Cycles should be a positive number.");
+        setCycles(5);
+      }
+    }
+  }, [fundamentalFreq, harmonics, cycles]);
 
   const getQueryParam = (queryParam) => {
     const urlSearchParams = new URLSearchParams(window.location.search);
@@ -135,6 +198,7 @@ const HarmonicExplorer = () => {
     setCycles(cycleCount);
 
     const harmonicCount = parseFloat(getQueryParam("harmonics")) || 1;
+
     if (harmonicCount > 0) {
       const updatedHarmonics = [];
       for (let i = 1; i <= harmonicCount; i++) {
@@ -160,26 +224,6 @@ const HarmonicExplorer = () => {
 
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
   }, [fundamentalFreq, harmonics, cycles]);
-
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
-
-  const updateWindowDimensions = () => {
-    setWindowSize({
-      width: window.innerWidth,
-      height: window.innerHeight,
-    });
-  };
-
-  useEffect(() => {
-    window.addEventListener("resize", updateWindowDimensions);
-
-    return () => {
-      window.removeEventListener("resize", updateWindowDimensions);
-    };
-  }, []);
 
   return (
     <Grid container spacing={2}>
@@ -219,6 +263,12 @@ const HarmonicExplorer = () => {
               }}
             />
           </div>
+          <Typography variant="h6" style={{ marginTop: "20px" }}>
+            Root Mean Square: {rms.toFixed(3)}
+          </Typography>
+          <Typography variant="h6" style={{ marginTop: "10px" }}>
+            Peek to Peek: {peekToPeek.toFixed(2)}
+          </Typography>
           <div>
             <Typography variant="h5" style={{ marginTop: "20px" }}>
               Harmonics:
@@ -310,18 +360,7 @@ const HarmonicExplorer = () => {
                 y: combinedSignalData.signal,
               },
             ]}
-            layout={{
-              // width: windowSize.width * 0.6,
-              // height: windowSize.height * 0.6,
-              title: "Combined Signal",
-              xaxis: {
-                title: "Time (seconds)",
-              },
-              yaxis: {
-                title: "Amplitude",
-              },
-              autosize: true,
-            }}
+            layout={layout}
           />
         </Box>
       </Grid>
