@@ -5,7 +5,7 @@ import { TextField, Button, Grid, Typography, Box } from "@mui/material";
 const HarmonicExplorer = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
   const [harmonics, setHarmonics] = useState([
-    { harmonic: 1, amplitude: 1, phaseAngle: 0 },
+    { harmonic: 1, amplitudePeek: 0, amplitudeRMS: 0, phaseAngle: 0 },
   ]);
   const [cycles, setCycles] = useState(5);
 
@@ -13,9 +13,17 @@ const HarmonicExplorer = () => {
     setFundamentalFreq(e.target.value);
   };
 
-  const changeAmplitude = (index, value) => {
+  const changeAmplitudePeek = (index, value) => {
     const updatedHarmonics = [...harmonics];
-    updatedHarmonics[index].amplitude = value;
+    updatedHarmonics[index].amplitudePeek = value;
+    updatedHarmonics[index].amplitudeRMS = value / Math.sqrt(2);
+    setHarmonics(updatedHarmonics);
+  };
+
+  const changeAmplitudeRMS = (index, value) => {
+    const updatedHarmonics = [...harmonics];
+    updatedHarmonics[index].amplitudeRMS = value;
+    updatedHarmonics[index].amplitudePeek = value * Math.sqrt(2);
     setHarmonics(updatedHarmonics);
   };
 
@@ -33,7 +41,12 @@ const HarmonicExplorer = () => {
     const nextHarmonic = harmonics.length + 1;
     setHarmonics([
       ...harmonics,
-      { harmonic: nextHarmonic, amplitude: 1, phaseAngle: 0 },
+      {
+        harmonic: nextHarmonic,
+        amplitudePeek: 0,
+        amplitudeRMS: 0,
+        phaseAngle: 0,
+      },
     ]);
   };
 
@@ -59,7 +72,7 @@ const HarmonicExplorer = () => {
 
       harmonics.forEach((harmonic) => {
         const frequency = fundamentalFreq * harmonic.harmonic;
-        const amplitude = harmonic.amplitude;
+        const amplitude = harmonic.amplitudePeek;
         const phase = harmonic.phaseAngle;
         y += amplitude * Math.sin(2 * Math.PI * frequency * t + phase);
       });
@@ -197,17 +210,37 @@ const HarmonicExplorer = () => {
     const cycleFromUrl = parseInt(getQueryParam("nc")) || 5;
     setCycles(cycleFromUrl);
 
-    const harmonicCount = parseFloat(getQueryParam("harmonics")) || 1;
-
-    if (harmonicCount > 0) {
-      const updatedHarmonics = [];
-      for (let i = 1; i <= harmonicCount; i++) {
-        const amplitude = parseFloat(getQueryParam(`amp${i}`)) || 1;
-        const phaseAngle = parseFloat(getQueryParam(`pa${i}`)) || 0;
-        updatedHarmonics.push({ harmonic: i, amplitude, phaseAngle });
-      }
-      setHarmonics(updatedHarmonics);
+    const updatedHarmonics = [];
+    for (let i = 1; i <= 200; i++) {
+      const amplitudePeek =
+        parseFloat(getQueryParam(`a${i}`)) ||
+        parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) ||
+        0;
+      const amplitudeRMS =
+        parseFloat(getQueryParam(`ar${i}`)) ||
+        parseFloat(getQueryParam(`a${i}`)) / Math.sqrt(2) ||
+        0;
+      const phaseAngle =
+        (parseFloat(getQueryParam(`p${i}`)) * Math.PI) / 180 || 0;
+      updatedHarmonics.push({
+        harmonic: i,
+        amplitude: amplitudePeek,
+        amplitudeRMS: amplitudeRMS,
+        phaseAngle,
+      });
     }
+
+    for (let a = 200; a > 0; a--) {
+      const amp = parseFloat(getQueryParam(`a${a}`)) || 0;
+      const pa = parseFloat(getQueryParam(`p${a}`)) || 0;
+
+      if (amp == 0 && pa == 0) {
+        updatedHarmonics.splice(a - 1, 1);
+      } else {
+        break;
+      }
+    }
+    setHarmonics(updatedHarmonics);
   }, []);
 
   useEffect(() => {
@@ -215,11 +248,20 @@ const HarmonicExplorer = () => {
 
     newUrlSearchParams.set("freq", fundamentalFreq.toString());
     newUrlSearchParams.set("nc", cycles.toString());
-    newUrlSearchParams.set("harmonics", harmonics.length.toString());
 
     harmonics.forEach((harmonic, index) => {
-      newUrlSearchParams.set(`amp${index + 1}`, harmonic.amplitude.toString());
-      newUrlSearchParams.set(`pa${index + 1}`, harmonic.phaseAngle.toString());
+      newUrlSearchParams.set(
+        `a${index + 1}`,
+        harmonic.amplitudePeek.toString()
+      );
+      newUrlSearchParams.set(
+        `ar${index + 1}`,
+        harmonic.amplitudeRMS.toString()
+      );
+      newUrlSearchParams.set(
+        `p${index + 1}`,
+        ((harmonic.phaseAngle * 180) / Math.PI).toString()
+      );
     });
 
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
@@ -321,10 +363,10 @@ const HarmonicExplorer = () => {
                     type="number"
                     label="Amplitude (Peek)"
                     size="small"
-                    value={harmonic.amplitude}
+                    value={harmonic.amplitudePeek}
                     inputProps={{ step: 0.01, min: 0 }}
                     onChange={(e) =>
-                      changeAmplitude(index, parseFloat(e.target.value))
+                      changeAmplitudePeek(index, parseFloat(e.target.value))
                     }
                     style={{ maxWidth: "120px", marginTop: "10px" }}
                   />
@@ -332,13 +374,10 @@ const HarmonicExplorer = () => {
                     type="number"
                     label="Amplitude (RMS)"
                     size="small"
-                    value={harmonic.amplitude / Math.sqrt(2)}
+                    value={harmonic.amplitudeRMS}
                     inputProps={{ step: 0.01, min: 0 }}
                     onChange={(e) =>
-                      changeAmplitude(
-                        index,
-                        parseFloat(e.target.value * Math.sqrt(2))
-                      )
+                      changeAmplitudeRMS(index, parseFloat(e.target.value))
                     }
                     style={{
                       maxWidth: "120px",
