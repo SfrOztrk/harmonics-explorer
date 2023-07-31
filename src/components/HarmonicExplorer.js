@@ -191,11 +191,11 @@ const HarmonicExplorer = () => {
   };
 
   useEffect(() => {
-    const freq = parseFloat(getQueryParam("freq")) || 50;
-    setFundamentalFreq(freq);
+    const freqFromUrl = parseFloat(getQueryParam("freq")) || 50;
+    setFundamentalFreq(freqFromUrl);
 
-    const cycleCount = parseFloat(getQueryParam("cycle")) || 5;
-    setCycles(cycleCount);
+    const cycleFromUrl = parseInt(getQueryParam("nc")) || 5;
+    setCycles(cycleFromUrl);
 
     const harmonicCount = parseFloat(getQueryParam("harmonics")) || 1;
 
@@ -214,7 +214,7 @@ const HarmonicExplorer = () => {
     const newUrlSearchParams = new URLSearchParams();
 
     newUrlSearchParams.set("freq", fundamentalFreq.toString());
-    newUrlSearchParams.set("cycle", cycles.toString());
+    newUrlSearchParams.set("nc", cycles.toString());
     newUrlSearchParams.set("harmonics", harmonics.length.toString());
 
     harmonics.forEach((harmonic, index) => {
@@ -229,8 +229,8 @@ const HarmonicExplorer = () => {
     <Grid container spacing={2}>
       <Grid item xs={12} sm={6} md={4}>
         <Box p={2}>
-          <Typography variant="h1" fontSize="50px">
-            Harmonic Explorer
+          <Typography variant="h1" fontSize="40px">
+            Waveform Generator
           </Typography>
           <div>
             <TextField
@@ -319,14 +319,32 @@ const HarmonicExplorer = () => {
                   )}
                   <TextField
                     type="number"
-                    label="Amplitude"
+                    label="Amplitude (Peek)"
                     size="small"
                     value={harmonic.amplitude}
                     inputProps={{ step: 0.01, min: 0 }}
                     onChange={(e) =>
                       changeAmplitude(index, parseFloat(e.target.value))
                     }
-                    style={{ maxWidth: "150px", marginTop: "10px" }}
+                    style={{ maxWidth: "120px", marginTop: "10px" }}
+                  />
+                  <TextField
+                    type="number"
+                    label="Amplitude (RMS)"
+                    size="small"
+                    value={harmonic.amplitude / Math.sqrt(2)}
+                    inputProps={{ step: 0.01, min: 0 }}
+                    onChange={(e) =>
+                      changeAmplitude(
+                        index,
+                        parseFloat(e.target.value * Math.sqrt(2))
+                      )
+                    }
+                    style={{
+                      maxWidth: "120px",
+                      marginTop: "10px",
+                      marginLeft: "10px",
+                    }}
                   />
                   <TextField
                     type="number"
@@ -340,7 +358,7 @@ const HarmonicExplorer = () => {
                     style={{
                       minWidth: "150px",
                       marginTop: "10px",
-                      marginLeft: "20px",
+                      marginLeft: "10px",
                     }}
                   />
                 </Grid>
