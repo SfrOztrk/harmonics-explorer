@@ -50,13 +50,6 @@ const HarmonicExplorer = () => {
     ]);
   };
 
-  const removeLastHarmonic = () => {
-    const updatedHarmonics = [...harmonics];
-    const lastHarmonic = updatedHarmonics.length - 1;
-    updatedHarmonics.splice(lastHarmonic, 1);
-    setHarmonics(updatedHarmonics);
-  };
-
   const combinedSignal = () => {
     const time = [];
     const signal = [];
@@ -319,13 +312,6 @@ const HarmonicExplorer = () => {
               <Grid item xs={12} style={{ marginTop: "20px" }}>
                 <Button variant="contained" onClick={addHarmonic}>
                   Add Harmonic
-                </Button>
-                <Button
-                  variant="contained"
-                  style={{ marginLeft: "20px" }}
-                  onClick={removeLastHarmonic}
-                >
-                  Remove Last Harmonic
                 </Button>
               </Grid>
               {harmonics.map((harmonic, index) => (
