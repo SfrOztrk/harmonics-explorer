@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 import { TextField, Button, Grid, Typography, Box } from "@mui/material";
 
-const HarmonicExplorer = () => {
+const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
   const [harmonics, setHarmonics] = useState([
     { harmonic: 1, amplitudePeek: 0, amplitudeRMS: 0, phaseAngle: 0 },
@@ -411,4 +411,4 @@ const HarmonicExplorer = () => {
   );
 };
 
-export default HarmonicExplorer;
+export default WaveformGenerator;

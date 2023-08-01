@@ -1,10 +1,10 @@
 import React from "react";
-import HarmonicsExplorer from "./components/HarmonicExplorer";
+import WavefromGenerator from "./components/WaveformGenerator";
 
 function App() {
   return (
     <div className="App">
-      <HarmonicsExplorer />
+      <WavefromGenerator />
     </div>
   );
 }
