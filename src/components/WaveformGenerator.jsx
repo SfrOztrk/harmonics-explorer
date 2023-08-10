@@ -115,6 +115,7 @@ const WaveformGenerator = () => {
 
   const [rms, setRms] = useState(0);
   const [peekToPeek, setPeekToPeek] = useState(0);
+  const [zeroCross, setZeroCross] = useState(0);
 
   const calculateRMS = (signal) => {
     const length = signal.length;
@@ -138,6 +139,26 @@ const WaveformGenerator = () => {
     const pp = max - min;
 
     return pp;
+  };
+
+  const findZeroCrossings = (signal, time) => {
+    const zeroCrossings = [];
+
+    if (signal[0] == 0) {
+      zeroCrossings.push(time[0])
+    }
+    for (let i = 1; i < signal.length; i++) {
+      if ((signal[i - 1] < 0 && signal[i] > 0) || (signal[i - 1] > 0 && signal[i] < 0)) {
+        zeroCrossings.push(time[i]);
+      }
+    }
+
+    if (zeroCrossings.length < 2) {
+      return NaN;
+    } else {
+      const zeroCrossingLength = zeroCrossings[1] - zeroCrossings[0];
+      return zeroCrossingLength;
+    }
   };
 
   const [combinedSignalData, setCombinedSignalData] = useState({
@@ -171,6 +192,9 @@ const WaveformGenerator = () => {
       setPeekToPeek(ppValue);
 
       const peeks = calculatePeeks(combined.signal);
+
+      const zcLengthValue = findZeroCrossings(combined.signal, combined.time);
+      setZeroCross(zcLengthValue);
 
       setLayout({
         ...layout,
@@ -339,6 +363,9 @@ const WaveformGenerator = () => {
           </Typography>
           <Typography variant="h6" style={{ marginTop: "10px" }}>
             Peek to Peek: {peekToPeek.toFixed(2)}
+          </Typography>
+          <Typography variant="h6" style={{ marginTop: "10px" }}>
+            Zero Cross: {zeroCross.toFixed(3)} seconds
           </Typography>
           <div>
             <Typography variant="h5" style={{ marginTop: "20px" }}>
