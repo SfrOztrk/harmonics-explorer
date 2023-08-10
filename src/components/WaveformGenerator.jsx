@@ -197,14 +197,16 @@ const WaveformGenerator = () => {
   };
 
   useEffect(() => {
-    const freqFromUrl = parseFloat(getQueryParam("freq")) || 50;
+    const freqFromUrl = parseFloat(getQueryParam("f")) || 50;
     setFundamentalFreq(freqFromUrl);
 
     const cycleFromUrl = parseInt(getQueryParam("nc")) || 5;
     setCycles(cycleFromUrl);
 
     const updatedHarmonics = [];
-    for (let i = 1; i <= 200; i++) {
+    const harmonicLimit = 200;
+
+    for (let i = 1; i <= harmonicLimit; i++) {
       const amplitudePeek =
         parseFloat(getQueryParam(`a${i}`)) ||
         parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) ||
@@ -215,19 +217,58 @@ const WaveformGenerator = () => {
         0;
       const phaseAngle =
         (parseFloat(getQueryParam(`p${i}`)) * Math.PI) / 180 || 0;
+
+      // if (ap == NaN || ar == NaN || ap == ar * Math.sqrt(2)) {
+      // }
+
+      if (amplitudePeek === amplitudeRMS * Math.sqrt(2)) {
+        // updatedHarmonics.push({
+        //   harmonic: i,
+        //   amplitudePeek,
+        //   amplitudeRMS,
+        //   phaseAngle,
+        // });
+      }
       updatedHarmonics.push({
         harmonic: i,
-        amplitude: amplitudePeek,
-        amplitudeRMS: amplitudeRMS,
+        amplitudePeek,
+        amplitudeRMS,
         phaseAngle,
       });
     }
 
-    for (let a = 200; a > 0; a--) {
-      const amp = parseFloat(getQueryParam(`a${a}`)) || 0;
-      const pa = parseFloat(getQueryParam(`p${a}`)) || 0;
+    for (let a = harmonicLimit; a > 0; a--) {
+      const ap =
+        parseFloat(getQueryParam(`a${a}`)) ||
+        parseFloat(getQueryParam(`ar${a}`)) * Math.sqrt(2) ||
+        0;
+      const ar =
+        parseFloat(getQueryParam(`ar${a}`)) ||
+        parseFloat(getQueryParam(`a${a}`)) / Math.sqrt(2) ||
+        0;
 
-      if (amp == 0 && pa == 0) {
+      if (ap !== ar * Math.sqrt(2)) {
+        const harmonicIndex = updatedHarmonics.findIndex(
+          (item) => item.harmonic === a
+        );
+        updatedHarmonics[harmonicIndex].amplitudePeek = 0;
+        updatedHarmonics[harmonicIndex].amplitudeRMS = 0;
+        updatedHarmonics[harmonicIndex].phaseAngle = 0;
+      }
+    }
+
+    for (let a = harmonicLimit; a > 0; a--) {
+      const ap =
+        parseFloat(getQueryParam(`a${a}`)) ||
+        parseFloat(getQueryParam(`ar${a}`)) * Math.sqrt(2) ||
+        0;
+      const ar =
+        parseFloat(getQueryParam(`ar${a}`)) ||
+        parseFloat(getQueryParam(`a${a}`)) / Math.sqrt(2) ||
+        0;
+      const pa = (parseFloat(getQueryParam(`p${a}`)) * Math.PI) / 180 || 0;
+
+      if (ap === 0 && ar === 0 && pa === 0) {
         updatedHarmonics.splice(a - 1, 1);
       } else {
         break;
@@ -239,22 +280,17 @@ const WaveformGenerator = () => {
   useEffect(() => {
     const newUrlSearchParams = new URLSearchParams();
 
-    newUrlSearchParams.set("freq", fundamentalFreq.toString());
+    newUrlSearchParams.set("f", fundamentalFreq.toString());
     newUrlSearchParams.set("nc", cycles.toString());
 
     harmonics.forEach((harmonic, index) => {
-      newUrlSearchParams.set(
-        `a${index + 1}`,
-        harmonic.amplitudePeek.toString()
-      );
-      newUrlSearchParams.set(
-        `ar${index + 1}`,
-        harmonic.amplitudeRMS.toString()
-      );
-      newUrlSearchParams.set(
-        `p${index + 1}`,
-        ((harmonic.phaseAngle * 180) / Math.PI).toString()
-      );
+      const a = harmonic.amplitudePeek;
+      const ar = harmonic.amplitudeRMS;
+      const p = harmonic.phaseAngle;
+
+      newUrlSearchParams.set(`a${index + 1}`, a.toString());
+      newUrlSearchParams.set(`ar${index + 1}`, ar.toString());
+      newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
     });
 
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
@@ -262,7 +298,7 @@ const WaveformGenerator = () => {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid item xs={12} md={6} lg={4}>
         <Box p={2}>
           <Typography variant="h1" fontSize="40px">
             Waveform Generator
@@ -270,7 +306,7 @@ const WaveformGenerator = () => {
           <div>
             <TextField
               item
-              xs={12}
+              xs={4}
               sm={6}
               md={4}
               type="number"
@@ -392,7 +428,7 @@ const WaveformGenerator = () => {
           </div>
         </Box>
       </Grid>
-      <Grid item xs={12} sm={6} md={4}>
+      <Grid item xs={12} md={6} lg={8}>
         <Box p={2}>
           <Plot
             data={[
