@@ -422,10 +422,6 @@ const WaveformGenerator = () => {
         saveAs(blob, 'waveform.png')
       }
 
-      // const link = document.createElement('a');
-      // link.href = dataUrl;
-      // link.download = 'wavefrom.png';
-      // link.click();
     }).catch((error) => {
       console.log('Error: ', error);
     });
