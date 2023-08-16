@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 import { TextField, Button, Grid, Typography, Box } from "@mui/material";
-import { useParams, useHistory } from "react-router-dom";
-import { AddBoxOutlined } from "@mui/icons-material";
+import { AddBoxOutlined} from "@mui/icons-material";
+import CopyButton from "./CopyButton";
+import DomToImage from "dom-to-image";
+import { saveAs } from "file-saver";
 
 const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
@@ -362,7 +364,72 @@ const WaveformGenerator = () => {
     });
     
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
-  }, [fundamentalFreq, harmonics, cycles]);
+  }, [fundamentalFreq, harmonics, cycles, isAmplPeekChangeArray, isAmplRmsChangeArray]);
+
+  const countDecimalPart = (number) => {
+    let decimalPart = (number.toString().split('.')[1] || '').length;
+    return decimalPart;
+  }
+
+  const calculateStep = (number) => {
+    let decimalPart = countDecimalPart(number);
+    if (decimalPart > 3) {
+      decimalPart = 3
+    }
+    const step = 1 / Math.pow(10, decimalPart);
+    return step
+  };
+
+  const downloadPlotAsPNG = () => {
+    const chartNode = document.querySelector('.js-plotly-plot');
+    DomToImage.toPng(chartNode).then((dataUrl) => {
+      const img = new Image();
+      img.src = dataUrl;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        const context = canvas.getContext('2d');
+        context.drawImage(img, 0, 0);
+
+        let text = "";
+
+        text += `freq=${parseFloat(getQueryParam("f"))} `;
+        text += `nc=${parseFloat(getQueryParam("nc"))} `;
+
+        for (let i = 1; i <= 200; i++) {
+          const a = parseFloat(getQueryParam(`a${i}`)) || 0;
+          const ar = parseFloat(getQueryParam(`ar${i}`)) || 0;
+          const p = parseFloat(getQueryParam(`p${i}`)) || 0;
+
+          if (a != 0) {
+            text += `a${i}=${a} `;
+          }
+          if (ar != 0) {
+            text += `ar${i}=${ar} `;
+          }
+          if (p != 0) {
+            text += `p${i}=${p} `;
+          }
+        }
+
+        context.font = '16px Arial';
+        context.fillStyle = 'black';
+        context.fillText(text, 10, img.height - 5);
+
+        const blob = canvas.toDataURL('image/png');
+        saveAs(blob, 'waveform.png')
+      }
+
+      // const link = document.createElement('a');
+      // link.href = dataUrl;
+      // link.download = 'wavefrom.png';
+      // link.click();
+    }).catch((error) => {
+      console.log('Error: ', error);
+    });
+  };
 
   return (
     <Grid container spacing={2}>
@@ -457,7 +524,7 @@ const WaveformGenerator = () => {
                     label="Amplitude (Peek)"
                     size="small"
                     value={harmonic.amplitudePeek}
-                    inputProps={{ step: 0.01, min: 0 }}
+                    inputProps={{ step: calculateStep(harmonic.amplitudePeek), min: 0 }}
                     onChange={(e) =>
                       changeAmplitudePeek(index, parseFloat(e.target.value))
                     }
@@ -468,7 +535,7 @@ const WaveformGenerator = () => {
                     label="Amplitude (RMS)"
                     size="small"
                     value={harmonic.amplitudeRMS}
-                    inputProps={{ step: 0.01, min: 0 }}
+                    inputProps={{ step: calculateStep(harmonic.amplitudeRMS), min: 0 }}
                     onChange={(e) =>
                       changeAmplitudeRMS(index, parseFloat(e.target.value))
                     }
@@ -482,8 +549,8 @@ const WaveformGenerator = () => {
                     type="number"
                     label="Phase Angle (degrees)"
                     size="small"
-                    value={(harmonic.phaseAngle * 180) / Math.PI}
-                    inputProps={{ step: 0.1, min: 0, max: 360 }}
+                    value= {(harmonic.phaseAngle * 180) / Math.PI}
+                    inputProps={{ step: (calculateStep((harmonic.phaseAngle * 180) / Math.PI)), min: 0, max: 360 }}
                     onChange={(e) =>
                       changePhaseAngle(index, parseFloat(e.target.value))
                     }
@@ -500,7 +567,7 @@ const WaveformGenerator = () => {
         </Box>
       </Grid>
       <Grid item xs={12} md={6} lg={8}>
-        <Box p={2}>
+        <Box>
           <Plot
             data={[
               {
@@ -511,7 +578,22 @@ const WaveformGenerator = () => {
               },
             ]}
             layout={layout}
+            config={{displayModeBar: false, staticPlot: true}}
+            
           />
+          
+          <Grid display='flex' flexDirection='column' justifyContent='center'>
+            <Typography justifyContent='center'>
+              {window.location.href}
+            </Typography>
+            <Grid display='flex' flexDirection='row' justifyContent='space-around'>
+              <CopyButton text={window.location.href}/>
+              <Button variant="outlined" onClick={downloadPlotAsPNG}>
+                Export as PNG
+              </Button>
+            </Grid>
+          </Grid>
+          
         </Box>
       </Grid>
     </Grid>
