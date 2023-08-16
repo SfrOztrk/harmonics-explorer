@@ -52,7 +52,7 @@ const WaveformGenerator = () => {
 
   const changePhaseAngle = (index, value) => {
     const updatedHarmonics = [...harmonics];
-    updatedHarmonics[index].phaseAngle = (value * Math.PI) / 180;
+    updatedHarmonics[index].phaseAngle = value;
     setHarmonics(updatedHarmonics);
   };
 
@@ -103,7 +103,7 @@ const WaveformGenerator = () => {
       harmonics.forEach((harmonic) => {
         const frequency = fundamentalFreq * harmonic.harmonic;
         const amplitude = harmonic.amplitudePeek;
-        const phase = harmonic.phaseAngle;
+        const phase = harmonic.phaseAngle * Math.PI / 180;
         y += amplitude * Math.sin(2 * Math.PI * frequency * t + phase);
       });
 
@@ -272,7 +272,7 @@ const WaveformGenerator = () => {
     for (let i = 1; i <= harmonicLimit; i++) {
       const amplitudePeek = parseFloat(getQueryParam(`a${i}`)) || parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) || 0;
       const amplitudeRMS = parseFloat(getQueryParam(`ar${i}`)) || parseFloat(getQueryParam(`a${i}`)) / Math.sqrt(2) || 0;
-      const phaseAngle = parseFloat(getQueryParam(`p${i}`)) * Math.PI / 180 || 0;
+      const phaseAngle = parseFloat(getQueryParam(`p${i}`)) || 0;
 
       updatedHarmonics.push({
           harmonic: i,
@@ -359,7 +359,8 @@ const WaveformGenerator = () => {
         newUrlSearchParams.set(`ar${index + 1}`, ar.toString());
       }
       if (p != 0) {
-        newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
+        // newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
+        newUrlSearchParams.set(`p${index + 1}`, p.toString());
       }     
     });
     
@@ -545,8 +546,8 @@ const WaveformGenerator = () => {
                     type="number"
                     label="Phase Angle (degrees)"
                     size="small"
-                    value= {(harmonic.phaseAngle * 180) / Math.PI}
-                    inputProps={{ step: (calculateStep((harmonic.phaseAngle * 180) / Math.PI)), min: 0, max: 360 }}
+                    value= {harmonic.phaseAngle}
+                    inputProps={{ step: (calculateStep(harmonic.phaseAngle)), min: 0, max: 360 }}
                     onChange={(e) =>
                       changePhaseAngle(index, parseFloat(e.target.value))
                     }
