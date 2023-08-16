@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
 import { TextField, Button, Grid, Typography, Box } from "@mui/material";
+import { useParams, useHistory } from "react-router-dom";
+import { AddBoxOutlined } from "@mui/icons-material";
 
 const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
@@ -8,6 +10,9 @@ const WaveformGenerator = () => {
     { harmonic: 1, amplitudePeek: 0, amplitudeRMS: 0, phaseAngle: 0 },
   ]);
   const [cycles, setCycles] = useState(5);
+
+  const [isAmplPeekChangeArray, setIsAmplPeekChangeArray] = useState([{ isChange: false }]);
+  const [isAmplRmsChangeArray, setIsAmplRmsChangeArray] = useState([{ isChange: false }]);
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
@@ -18,6 +23,14 @@ const WaveformGenerator = () => {
     updatedHarmonics[index].amplitudePeek = value;
     updatedHarmonics[index].amplitudeRMS = value / Math.sqrt(2);
     setHarmonics(updatedHarmonics);
+    
+    const peekChange = [...isAmplPeekChangeArray];
+    peekChange[index].isChange = true;
+    setIsAmplPeekChangeArray(peekChange);
+
+    const rmsChange = [...isAmplRmsChangeArray];
+    rmsChange[index].isChange = false;
+    setIsAmplRmsChangeArray(rmsChange);
   };
 
   const changeAmplitudeRMS = (index, value) => {
@@ -25,6 +38,14 @@ const WaveformGenerator = () => {
     updatedHarmonics[index].amplitudeRMS = value;
     updatedHarmonics[index].amplitudePeek = value * Math.sqrt(2);
     setHarmonics(updatedHarmonics);
+
+    const peekChange = [...isAmplPeekChangeArray];
+    peekChange[index].isChange = false;
+    setIsAmplPeekChangeArray(peekChange);
+
+    const rmsChange = [...isAmplRmsChangeArray];
+    rmsChange[index].isChange = true;
+    setIsAmplRmsChangeArray(rmsChange);
   };
 
   const changePhaseAngle = (index, value) => {
@@ -47,6 +68,20 @@ const WaveformGenerator = () => {
         amplitudeRMS: 0,
         phaseAngle: 0,
       },
+    ]);
+
+    setIsAmplPeekChangeArray([
+      ...isAmplPeekChangeArray,
+      {
+        isChange: false,
+      }
+    ]);
+
+    setIsAmplRmsChangeArray([
+      ...isAmplRmsChangeArray,
+      {
+        isChange: false,
+      }
     ]);
   };
 
@@ -228,37 +263,33 @@ const WaveformGenerator = () => {
     setCycles(cycleFromUrl);
 
     const updatedHarmonics = [];
+    const peekChange = [];
+    const rmsChange = [];
     const harmonicLimit = 200;
 
     for (let i = 1; i <= harmonicLimit; i++) {
-      const amplitudePeek =
-        parseFloat(getQueryParam(`a${i}`)) ||
-        parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) ||
-        0;
-      const amplitudeRMS =
-        parseFloat(getQueryParam(`ar${i}`)) ||
-        parseFloat(getQueryParam(`a${i}`)) / Math.sqrt(2) ||
-        0;
-      const phaseAngle =
-        (parseFloat(getQueryParam(`p${i}`)) * Math.PI) / 180 || 0;
+      const amplitudePeek = parseFloat(getQueryParam(`a${i}`)) || parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) || 0;
+      const amplitudeRMS = parseFloat(getQueryParam(`ar${i}`)) || parseFloat(getQueryParam(`a${i}`)) / Math.sqrt(2) || 0;
+      const phaseAngle = parseFloat(getQueryParam(`p${i}`)) * Math.PI / 180 || 0;
 
-      // if (ap == NaN || ar == NaN || ap == ar * Math.sqrt(2)) {
-      // }
-
-      if (amplitudePeek === amplitudeRMS * Math.sqrt(2)) {
-        // updatedHarmonics.push({
-        //   harmonic: i,
-        //   amplitudePeek,
-        //   amplitudeRMS,
-        //   phaseAngle,
-        // });
-      }
       updatedHarmonics.push({
-        harmonic: i,
-        amplitudePeek,
-        amplitudeRMS,
-        phaseAngle,
+          harmonic: i,
+          amplitudePeek,
+          amplitudeRMS,
+          phaseAngle,
       });
+
+      const ampPeek = parseFloat(getQueryParam(`a${i}`)) || 0;
+      const ampRms = parseFloat(getQueryParam(`ar${i}`)) || 0;
+
+      peekChange.push({
+        isChange: (ampPeek != 0) ? true : false,
+      });
+
+      rmsChange.push({
+        isChange: (ampRms != 0) ? true: false,
+      })
+
     }
 
     for (let a = harmonicLimit; a > 0; a--) {
@@ -271,13 +302,13 @@ const WaveformGenerator = () => {
         parseFloat(getQueryParam(`a${a}`)) / Math.sqrt(2) ||
         0;
 
-      if (ap !== ar * Math.sqrt(2)) {
+      if (ap != ar * Math.sqrt(2)) {
         const harmonicIndex = updatedHarmonics.findIndex(
           (item) => item.harmonic === a
         );
-        updatedHarmonics[harmonicIndex].amplitudePeek = 0;
-        updatedHarmonics[harmonicIndex].amplitudeRMS = 0;
-        updatedHarmonics[harmonicIndex].phaseAngle = 0;
+        updatedHarmonics[harmonicIndex].amplitudeRMS = updatedHarmonics[harmonicIndex].amplitudePeek * Math.sqrt(2);
+        peekChange[harmonicIndex].isChange = true;
+        rmsChange[harmonicIndex].isChange = false;
       }
     }
 
@@ -294,11 +325,15 @@ const WaveformGenerator = () => {
 
       if (ap === 0 && ar === 0 && pa === 0) {
         updatedHarmonics.splice(a - 1, 1);
+        peekChange.splice(a-1, 1);
+        rmsChange.splice(a-1, 1);
       } else {
         break;
       }
     }
     setHarmonics(updatedHarmonics);
+    setIsAmplPeekChangeArray(peekChange);
+    setIsAmplRmsChangeArray(rmsChange);
   }, []);
 
   useEffect(() => {
@@ -312,11 +347,20 @@ const WaveformGenerator = () => {
       const ar = harmonic.amplitudeRMS;
       const p = harmonic.phaseAngle;
 
-      newUrlSearchParams.set(`a${index + 1}`, a.toString());
-      newUrlSearchParams.set(`ar${index + 1}`, ar.toString());
-      newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
-    });
+      const isPeekChange = isAmplPeekChangeArray[index].isChange;
+      const isRmsChange = isAmplRmsChangeArray[index].isChange;
 
+      if (a != 0 && isPeekChange) {
+        newUrlSearchParams.set(`a${index + 1}`, a.toString());
+      }
+      if (ar != 0 && isRmsChange) {
+        newUrlSearchParams.set(`ar${index + 1}`, ar.toString());
+      }
+      if (p != 0) {
+        newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
+      }     
+    });
+    
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
   }, [fundamentalFreq, harmonics, cycles]);
 
@@ -373,7 +417,7 @@ const WaveformGenerator = () => {
             </Typography>
             <Grid container spacing={1}>
               <Grid item xs={12} style={{ marginTop: "20px" }}>
-                <Button variant="contained" onClick={addHarmonic}>
+                <Button variant="contained" startIcon={<AddBoxOutlined />} onClick={addHarmonic}>
                   Add Harmonic
                 </Button>
               </Grid>
