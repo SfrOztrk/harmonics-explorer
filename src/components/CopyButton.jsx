@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import copy from "clipboard-copy";
 import { Button } from "@mui/material";
 
-const CopyButton = ({text}) => {
+const CopyButton = ({text, style, startIcon}) => {
     const [copied, setCopied] = useState(false);
 
     const handleCopy = () => {
@@ -16,8 +16,8 @@ const CopyButton = ({text}) => {
 
     return (
         <div>
-            <Button color="inherit" variant="outlined" onClick={handleCopy}>
-                {copied ? 'Copied' : 'Copy'}
+            <Button color="inherit" variant="outlined" onClick={handleCopy} startIcon={startIcon} style={style}>
+                {copied ? 'Copied' : 'Copy URL'}
             </Button>
         </div>
     );
