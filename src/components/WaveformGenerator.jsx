@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Plot from "react-plotly.js";
-import { TextField, Button, Grid, Typography, Box } from "@mui/material";
-import { AddBoxOutlined} from "@mui/icons-material";
+import { TextField, Button, Grid, Typography, Box, Card } from "@mui/material";
+import { AddBoxOutlined, ContentCopy, FileDownloadOutlined} from "@mui/icons-material";
 import CopyButton from "./CopyButton";
 import DomToImage from "dom-to-image";
 import { saveAs } from "file-saver";
@@ -204,8 +204,6 @@ const WaveformGenerator = () => {
   });
 
   const [layout, setLayout] = useState({
-    width: windowSize.width * 0.6,
-    height: windowSize.height * 0.8,
     title: "Combined Signal",
     xaxis: {
       title: "Time (seconds)",
@@ -359,7 +357,6 @@ const WaveformGenerator = () => {
         newUrlSearchParams.set(`ar${index + 1}`, ar.toString());
       }
       if (p != 0) {
-        // newUrlSearchParams.set(`p${index + 1}`, ((p * 180) / Math.PI).toString());
         newUrlSearchParams.set(`p${index + 1}`, p.toString());
       }     
     });
@@ -378,7 +375,7 @@ const WaveformGenerator = () => {
       decimalPart = 3
     }
     const step = 1 / Math.pow(10, decimalPart);
-    return step
+    return step;
   };
 
   const downloadPlotAsPNG = () => {
@@ -431,169 +428,165 @@ const WaveformGenerator = () => {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6} lg={4}>
-        <Box p={2}>
-          <Typography variant="h1" fontSize="40px">
-            Waveform Generator
-          </Typography>
-          <div>
-            <TextField
-              item
-              xs={4}
-              sm={6}
-              md={4}
-              type="number"
-              label="Fundamental Frequency (Hz)"
-              value={fundamentalFreq}
-              onChange={changeFundamentalFrequency}
-              style={{
-                maxWidth: "200px",
-                marginTop: "20px",
-              }}
-            />
-            <TextField
-              item
-              xs={12}
-              sm={6}
-              md={4}
-              type="number"
-              label="Number of Cycles"
-              value={cycles}
-              onChange={changeCycles}
-              style={{
-                maxWidth: "200px",
-                marginTop: "20px",
-                marginLeft: "10px",
-              }}
-            />
-          </div>
-          <Typography variant="h6" style={{ marginTop: "20px" }}>
-            Root Mean Square: {rms.toFixed(3)}
-          </Typography>
-          <Typography variant="h6" style={{ marginTop: "10px" }}>
-            Peek to Peek: {peekToPeek.toFixed(2)}
-          </Typography>
-          <Typography variant="h6" style={{ marginTop: "10px" }}>
-            Zero Cross: {zeroCross.toFixed(3)} seconds
-          </Typography>
-          <div>
-            <Typography variant="h5" style={{ marginTop: "20px" }}>
-              Harmonics:
+        <Card style={{marginTop: '20px', marginLeft: '10px', marginRight: '10px'}}>
+          <Box p={2}>
+            <Typography variant="h1" fontSize="32px">
+              Waveform Generator
             </Typography>
-            <Grid container spacing={1}>
-              <Grid item xs={12} style={{ marginTop: "20px" }}>
-                <Button variant="contained" startIcon={<AddBoxOutlined />} onClick={addHarmonic}>
-                  Add Harmonic
-                </Button>
-              </Grid>
-              {harmonics.map((harmonic, index) => (
-                <Grid
-                  item
-                  xs={12}
-                  key={harmonic.harmonic}
-                  style={{ marginTop: "10px" }}
-                >
-                  {harmonic.harmonic % 10 === 1 &&
-                  harmonic.harmonic % 100 !== 11 ? (
-                    <Typography>
-                      {harmonic.harmonic}st Harmonic Frequency:{" "}
-                      {fundamentalFreq * harmonic.harmonic} Hz
-                    </Typography>
-                  ) : harmonic.harmonic % 10 === 2 &&
-                    harmonic.harmonic % 100 !== 12 ? (
-                    <Typography>
-                      {harmonic.harmonic}nd Harmonic Frequency:{" "}
-                      {fundamentalFreq * harmonic.harmonic} Hz
-                    </Typography>
-                  ) : harmonic.harmonic % 10 === 3 &&
-                    harmonic.harmonic % 100 !== 13 ? (
-                    <Typography>
-                      {harmonic.harmonic}rd Harmonic Frequency:{" "}
-                      {fundamentalFreq * harmonic.harmonic} Hz
-                    </Typography>
-                  ) : (
-                    <Typography>
-                      {harmonic.harmonic}th Harmonic Frequency:{" "}
-                      {fundamentalFreq * harmonic.harmonic} Hz
-                    </Typography>
-                  )}
-                  <TextField
-                    type="number"
-                    label="Amplitude (Peek)"
-                    size="small"
-                    value={harmonic.amplitudePeek}
-                    inputProps={{ step: calculateStep(harmonic.amplitudePeek), min: 0 }}
-                    onChange={(e) =>
-                      changeAmplitudePeek(index, parseFloat(e.target.value))
-                    }
-                    style={{ maxWidth: "120px", marginTop: "10px" }}
-                  />
-                  <TextField
-                    type="number"
-                    label="Amplitude (RMS)"
-                    size="small"
-                    value={harmonic.amplitudeRMS}
-                    inputProps={{ step: calculateStep(harmonic.amplitudeRMS), min: 0 }}
-                    onChange={(e) =>
-                      changeAmplitudeRMS(index, parseFloat(e.target.value))
-                    }
-                    style={{
-                      maxWidth: "120px",
-                      marginTop: "10px",
-                      marginLeft: "10px",
-                    }}
-                  />
-                  <TextField
-                    type="number"
-                    label="Phase Angle (degrees)"
-                    size="small"
-                    value= {harmonic.phaseAngle}
-                    inputProps={{ step: (calculateStep(harmonic.phaseAngle)), min: 0, max: 360 }}
-                    onChange={(e) =>
-                      changePhaseAngle(index, parseFloat(e.target.value))
-                    }
-                    style={{
-                      minWidth: "150px",
-                      marginTop: "10px",
-                      marginLeft: "10px",
-                    }}
-                  />
+            <Grid style={{display: 'flex', flexDirection: 'column'}}>
+              <TextField
+                type="number"
+                label="Fundamental Frequency (Hz)"
+                size='small'
+                value={fundamentalFreq}
+                onChange={changeFundamentalFrequency}
+                style={{
+                  maxWidth: "200px",
+                  marginTop: "20px",
+                  marginRight: '10px',
+                }}
+              />
+              <TextField
+                type="number"
+                label="Number of Cycles"
+                size="small"
+                value={cycles}
+                onChange={changeCycles}
+                style={{
+                  maxWidth: "200px",
+                  marginTop: "20px",
+                }}
+              />
+            </Grid>
+            <Typography variant="h6" style={{ marginTop: "20px" }}>
+              Root Mean Square: {rms.toFixed(3)}
+            </Typography>
+            <Typography variant="h6" style={{ marginTop: "10px" }}>
+              Peek to Peek: {peekToPeek.toFixed(2)}
+            </Typography>
+            <Typography variant="h6" style={{ marginTop: "10px" }}>
+              Zero Cross: {zeroCross.toFixed(3)} seconds
+            </Typography>
+            <div>
+              <Typography variant="h5" style={{ marginTop: "20px" }}>
+                Harmonics:
+              </Typography>
+              <Grid container spacing={1}>
+                <Grid item xs={12} style={{ marginTop: "20px" }}>
+                  <Button variant="contained" startIcon={<AddBoxOutlined />} onClick={addHarmonic}>
+                    Add Harmonic
+                  </Button>
                 </Grid>
-              ))}
-            </Grid>
-          </div>
-        </Box>
+                {harmonics.map((harmonic, index) => (
+                  <Grid
+                    item
+                    xs={12}
+                    key={harmonic.harmonic}
+                    style={{ marginTop: "10px" }}
+                  >
+                    {harmonic.harmonic % 10 === 1 &&
+                    harmonic.harmonic % 100 !== 11 ? (
+                      <Typography>
+                        {harmonic.harmonic}st Harmonic Frequency:{" "}
+                        {fundamentalFreq * harmonic.harmonic} Hz
+                      </Typography>
+                    ) : harmonic.harmonic % 10 === 2 &&
+                      harmonic.harmonic % 100 !== 12 ? (
+                      <Typography>
+                        {harmonic.harmonic}nd Harmonic Frequency:{" "}
+                        {fundamentalFreq * harmonic.harmonic} Hz
+                      </Typography>
+                    ) : harmonic.harmonic % 10 === 3 &&
+                      harmonic.harmonic % 100 !== 13 ? (
+                      <Typography>
+                        {harmonic.harmonic}rd Harmonic Frequency:{" "}
+                        {fundamentalFreq * harmonic.harmonic} Hz
+                      </Typography>
+                    ) : (
+                      <Typography>
+                        {harmonic.harmonic}th Harmonic Frequency:{" "}
+                        {fundamentalFreq * harmonic.harmonic} Hz
+                      </Typography>
+                    )}
+                    <TextField
+                      type="number"
+                      label="Amplitude (Peek)"
+                      size="small"
+                      value={harmonic.amplitudePeek}
+                      inputProps={{ step: calculateStep(harmonic.amplitudePeek), min: 0 }}
+                      onChange={(e) =>
+                        changeAmplitudePeek(index, parseFloat(e.target.value))
+                      }
+                      style={{ maxWidth: "120px", marginTop: "10px", marginRight: '10px' }}
+                    />
+                    <TextField
+                      type="number"
+                      label='Amplitude (RMS)'
+                      size="small"
+                      value={harmonic.amplitudeRMS}
+                      inputProps={{ step: calculateStep(harmonic.amplitudeRMS), min: 0 }}
+                      onChange={(e) =>
+                        changeAmplitudeRMS(index, parseFloat(e.target.value))
+                      }
+                      style={{
+                        maxWidth: '120px',
+                        marginTop: "10px",
+                        marginRight: '10px',
+                      }}
+                    />
+                    <TextField
+                      type="number"
+                      label='Phase Angle (Degree)'
+                      size="small"
+                      value={harmonic.phaseAngle}
+                      inputProps={{ step: calculateStep(harmonic.phaseAngle), min: 0, max: 360 }}
+                      onChange={(e) =>
+                        changePhaseAngle(index, parseFloat(e.target.value))
+                      }
+                      style={{
+                        minWidth: '150px',
+                        marginTop: "10px",
+                        marginRight: '10px',
+                      }}
+                    />
+                  </Grid>
+                ))}
+              </Grid>
+            </div>
+          </Box>
+        </Card>
       </Grid>
+
       <Grid item xs={12} md={6} lg={8}>
-        <Box>
-          <Plot
-            data={[
-              {
-                type: "scatter",
-                mode: "line",
-                x: combinedSignalData.time,
-                y: combinedSignalData.signal,
-              },
-            ]}
-            layout={layout}
-            config={{displayModeBar: false, staticPlot: true}}
-            
-          />
-          
-          <Grid display='flex' flexDirection='column' justifyContent='center'>
-            <Typography justifyContent='center'>
-              {window.location.href}
-            </Typography>
-            <Grid display='flex' flexDirection='row' justifyContent='space-around'>
-              <CopyButton text={window.location.href}/>
-              <Button variant="outlined" onClick={downloadPlotAsPNG}>
-                Export as PNG
-              </Button>
+        <Card style={{marginTop: '20px', marginLeft: '10px', marginRight: '10px', marginBottom: '10px', }}>
+        
+            <Grid style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '10px', }} >
+                <Plot
+                  data={[
+                    {
+                      type: "scatter",
+                      mode: "line",
+                      x: combinedSignalData.time,
+                      y: combinedSignalData.signal,
+                    },
+                  ]}
+                  layout={layout}
+                  config={{displayModeBar: false, staticPlot: true}}
+                />
+                <Grid display='flex' flexDirection='row' justifyContent='space-between'>
+                  <CopyButton text={window.location.href} startIcon={<ContentCopy/>} style={{marginLeft: '10px'}}/>
+                  <Button variant="outlined" startIcon={<FileDownloadOutlined/>}
+                  style={{color: 'black', borderColor: 'black', maxWidth: '150px', marginBottom: '10px', alignSelf: 'end'}} onClick={downloadPlotAsPNG}>
+                  Export
+                  </Button>
+                </Grid>  
+                  <Typography justifyContent='center' style={{wordWrap: 'break-word', marginLeft: '10px'}}>
+                  {window.location.href}
+                  </Typography>
             </Grid>
-          </Grid>
-          
-        </Box>
+          </Card>
+        </Grid>
       </Grid>
-    </Grid>
   );
 };
 
