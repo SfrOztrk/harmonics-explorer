@@ -9,45 +9,45 @@ import { saveAs } from "file-saver";
 const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
   const [harmonics, setHarmonics] = useState([
-    { harmonic: 1, amplitudePeek: 0, amplitudeRMS: 0, phaseAngle: 0 },
+    { harmonic: 1, amplitudePeak: 0, amplitudeRMS: 0, phaseAngle: 0 },
   ]);
   const [cycles, setCycles] = useState(5);
 
-  const [isAmplPeekChangeArray, setIsAmplPeekChangeArray] = useState([{ isChange: false }]);
-  const [isAmplRmsChangeArray, setIsAmplRmsChangeArray] = useState([{ isChange: false }]);
+  const [isAmplPeakChange, setIsAmplPeakChange] = useState([{ isChange: false }]);
+  const [isAmplRmsChange, setIsAmplRmsChange] = useState([{ isChange: false }]);
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
   };
 
-  const changeAmplitudePeek = (index, value) => {
+  const changeAmplitudePeak = (index, value) => {
     const updatedHarmonics = [...harmonics];
-    updatedHarmonics[index].amplitudePeek = value;
+    updatedHarmonics[index].amplitudePeak = value;
     updatedHarmonics[index].amplitudeRMS = value / Math.sqrt(2);
     setHarmonics(updatedHarmonics);
     
-    const peekChange = [...isAmplPeekChangeArray];
-    peekChange[index].isChange = true;
-    setIsAmplPeekChangeArray(peekChange);
+    const peakChange = [...isAmplPeakChange];
+    peakChange[index].isChange = true;
+    setIsAmplPeakChange(peakChange);
 
-    const rmsChange = [...isAmplRmsChangeArray];
+    const rmsChange = [...isAmplRmsChange];
     rmsChange[index].isChange = false;
-    setIsAmplRmsChangeArray(rmsChange);
+    setIsAmplRmsChange(rmsChange);
   };
 
   const changeAmplitudeRMS = (index, value) => {
     const updatedHarmonics = [...harmonics];
     updatedHarmonics[index].amplitudeRMS = value;
-    updatedHarmonics[index].amplitudePeek = value * Math.sqrt(2);
+    updatedHarmonics[index].amplitudePeak = value * Math.sqrt(2);
     setHarmonics(updatedHarmonics);
 
-    const peekChange = [...isAmplPeekChangeArray];
-    peekChange[index].isChange = false;
-    setIsAmplPeekChangeArray(peekChange);
+    const peakChange = [...isAmplPeakChange];
+    peakChange[index].isChange = false;
+    setIsAmplPeakChange(peakChange);
 
-    const rmsChange = [...isAmplRmsChangeArray];
+    const rmsChange = [...isAmplRmsChange];
     rmsChange[index].isChange = true;
-    setIsAmplRmsChangeArray(rmsChange);
+    setIsAmplRmsChange(rmsChange);
   };
 
   const changePhaseAngle = (index, value) => {
@@ -66,21 +66,21 @@ const WaveformGenerator = () => {
       ...harmonics,
       {
         harmonic: nextHarmonic,
-        amplitudePeek: 0,
+        amplitudePeak: 0,
         amplitudeRMS: 0,
         phaseAngle: 0,
       },
     ]);
 
-    setIsAmplPeekChangeArray([
-      ...isAmplPeekChangeArray,
+    setIsAmplPeakChange([
+      ...isAmplPeakChange,
       {
         isChange: false,
       }
     ]);
 
-    setIsAmplRmsChangeArray([
-      ...isAmplRmsChangeArray,
+    setIsAmplRmsChange([
+      ...isAmplRmsChange,
       {
         isChange: false,
       }
@@ -102,7 +102,7 @@ const WaveformGenerator = () => {
 
       harmonics.forEach((harmonic) => {
         const frequency = fundamentalFreq * harmonic.harmonic;
-        const amplitude = harmonic.amplitudePeek;
+        const amplitude = harmonic.amplitudePeak;
         const phase = harmonic.phaseAngle * Math.PI / 180;
         y += amplitude * Math.sin(2 * Math.PI * frequency * t + phase);
       });
@@ -134,7 +134,7 @@ const WaveformGenerator = () => {
     };
   }, []);
 
-  const calculatePeeks = (signal) => {
+  const calculatePeaks = (signal) => {
     let maxSignalValue = -Infinity;
     let minSignalValue = Infinity;
 
@@ -151,7 +151,7 @@ const WaveformGenerator = () => {
   };
 
   const [rms, setRms] = useState(0);
-  const [peekToPeek, setPeekToPeek] = useState(0);
+  const [peakToPeak, setPeakToPeak] = useState(0);
   const [zeroCross, setZeroCross] = useState(0);
 
   const calculateRMS = (signal) => {
@@ -167,11 +167,11 @@ const WaveformGenerator = () => {
     return rms;
   };
 
-  const calculatePeekToPeek = (signal) => {
-    const peeks = calculatePeeks(signal);
+  const calculatePeakToPeak = (signal) => {
+    const peaks = calculatePeaks(signal);
 
-    const min = peeks.minSignalValue;
-    const max = peeks.maxSignalValue;
+    const min = peaks.minSignalValue;
+    const max = peaks.maxSignalValue;
 
     const pp = max - min;
 
@@ -223,10 +223,10 @@ const WaveformGenerator = () => {
       const rmsValue = calculateRMS(combined.signal);
       setRms(rmsValue);
 
-      const ppValue = calculatePeekToPeek(combined.signal);
-      setPeekToPeek(ppValue);
+      const ppValue = calculatePeakToPeak(combined.signal);
+      setPeakToPeak(ppValue);
 
-      const peeks = calculatePeeks(combined.signal);
+      const peaks = calculatePeaks(combined.signal);
 
       const zcLengthValue = findZeroCrossings(combined.signal, combined.time);
       setZeroCross(zcLengthValue);
@@ -235,7 +235,7 @@ const WaveformGenerator = () => {
         ...layout,
         yaxis: {
           title: "Amplitude",
-          range: [peeks.minSignalValue - 0.5, peeks.maxSignalValue + 0.5],
+          range: [peaks.minSignalValue - 0.5, peaks.maxSignalValue + 0.5],
         },
       });
     } else {
@@ -263,27 +263,27 @@ const WaveformGenerator = () => {
     setCycles(cycleFromUrl);
 
     const updatedHarmonics = [];
-    const peekChange = [];
+    const peakChange = [];
     const rmsChange = [];
     const harmonicLimit = 200;
 
     for (let i = 1; i <= harmonicLimit; i++) {
-      const amplitudePeek = parseFloat(getQueryParam(`a${i}`)) || parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) || 0;
+      const amplitudePeak = parseFloat(getQueryParam(`a${i}`)) || parseFloat(getQueryParam(`ar${i}`)) * Math.sqrt(2) || 0;
       const amplitudeRMS = parseFloat(getQueryParam(`ar${i}`)) || parseFloat(getQueryParam(`a${i}`)) / Math.sqrt(2) || 0;
       const phaseAngle = parseFloat(getQueryParam(`p${i}`)) || 0;
 
       updatedHarmonics.push({
           harmonic: i,
-          amplitudePeek,
+          amplitudePeak: amplitudePeak,
           amplitudeRMS,
           phaseAngle,
       });
 
-      const ampPeek = parseFloat(getQueryParam(`a${i}`)) || 0;
+      const ampPeak = parseFloat(getQueryParam(`a${i}`)) || 0;
       const ampRms = parseFloat(getQueryParam(`ar${i}`)) || 0;
 
-      peekChange.push({
-        isChange: (ampPeek != 0) ? true : false,
+      peakChange.push({
+        isChange: (ampPeak != 0) ? true : false,
       });
 
       rmsChange.push({
@@ -306,8 +306,8 @@ const WaveformGenerator = () => {
         const harmonicIndex = updatedHarmonics.findIndex(
           (item) => item.harmonic === a
         );
-        updatedHarmonics[harmonicIndex].amplitudeRMS = updatedHarmonics[harmonicIndex].amplitudePeek * Math.sqrt(2);
-        peekChange[harmonicIndex].isChange = true;
+        updatedHarmonics[harmonicIndex].amplitudeRMS = updatedHarmonics[harmonicIndex].amplitudePeak * Math.sqrt(2);
+        peakChange[harmonicIndex].isChange = true;
         rmsChange[harmonicIndex].isChange = false;
       }
     }
@@ -325,15 +325,15 @@ const WaveformGenerator = () => {
 
       if (ap === 0 && ar === 0 && pa === 0) {
         updatedHarmonics.splice(a - 1, 1);
-        peekChange.splice(a-1, 1);
+        peakChange.splice(a-1, 1);
         rmsChange.splice(a-1, 1);
       } else {
         break;
       }
     }
     setHarmonics(updatedHarmonics);
-    setIsAmplPeekChangeArray(peekChange);
-    setIsAmplRmsChangeArray(rmsChange);
+    setIsAmplPeakChange(peakChange);
+    setIsAmplRmsChange(rmsChange);
   }, []);
 
   useEffect(() => {
@@ -343,14 +343,14 @@ const WaveformGenerator = () => {
     newUrlSearchParams.set("nc", cycles.toString());
 
     harmonics.forEach((harmonic, index) => {
-      const a = harmonic.amplitudePeek;
+      const a = harmonic.amplitudePeak;
       const ar = harmonic.amplitudeRMS;
       const p = harmonic.phaseAngle;
 
-      const isPeekChange = isAmplPeekChangeArray[index].isChange;
-      const isRmsChange = isAmplRmsChangeArray[index].isChange;
+      const isPeakChange = isAmplPeakChange[index].isChange;
+      const isRmsChange = isAmplRmsChange[index].isChange;
 
-      if (a != 0 && isPeekChange) {
+      if (a != 0 && isPeakChange) {
         newUrlSearchParams.set(`a${index + 1}`, a.toString());
       }
       if (ar != 0 && isRmsChange) {
@@ -362,7 +362,7 @@ const WaveformGenerator = () => {
     });
     
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
-  }, [fundamentalFreq, harmonics, cycles, isAmplPeekChangeArray, isAmplRmsChangeArray]);
+  }, [fundamentalFreq, harmonics, cycles, isAmplPeakChange, isAmplRmsChange]);
 
   const countDecimalPart = (number) => {
     let decimalPart = (number.toString().split('.')[1] || '').length;
@@ -386,11 +386,12 @@ const WaveformGenerator = () => {
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
-        canvas.height = img.height;
+        canvas.height = img.height + 500;
 
         const context = canvas.getContext('2d');
         context.drawImage(img, 0, 0);
 
+        // Wavefrom Attributes
         let text = "";
 
         text += `freq=${parseFloat(getQueryParam("f"))} `;
@@ -414,7 +415,7 @@ const WaveformGenerator = () => {
 
         context.font = '16px Arial';
         context.fillStyle = 'black';
-        context.fillText(text, 10, img.height - 5);
+        context.fillText(text, 10, img.height - 25);
 
         const blob = canvas.toDataURL('image/png');
         saveAs(blob, 'waveform.png')
@@ -428,7 +429,6 @@ const WaveformGenerator = () => {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={6} lg={4}>
-        <Card style={{marginTop: '20px', marginLeft: '10px', marginRight: '10px'}}>
           <Box p={2}>
             <Typography variant="h1" fontSize="32px">
               Waveform Generator
@@ -438,6 +438,7 @@ const WaveformGenerator = () => {
                 type="number"
                 label="Fundamental Frequency (Hz)"
                 size='small'
+                step='1'
                 value={fundamentalFreq}
                 onChange={changeFundamentalFrequency}
                 style={{
@@ -462,7 +463,7 @@ const WaveformGenerator = () => {
               Root Mean Square: {rms.toFixed(3)}
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
-              Peek to Peek: {peekToPeek.toFixed(2)}
+              Peak-to-Peak: {peakToPeak.toFixed(2)}
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
               Zero Cross: {zeroCross.toFixed(3)} seconds
@@ -473,7 +474,7 @@ const WaveformGenerator = () => {
               </Typography>
               <Grid container spacing={1}>
                 <Grid item xs={12} style={{ marginTop: "20px" }}>
-                  <Button variant="contained" startIcon={<AddBoxOutlined />} onClick={addHarmonic}>
+                  <Button variant="outlined" style={{borderColor: 'black', color: 'black'}} startIcon={<AddBoxOutlined />} onClick={addHarmonic}>
                     Add Harmonic
                   </Button>
                 </Grid>
@@ -510,18 +511,18 @@ const WaveformGenerator = () => {
                     )}
                     <TextField
                       type="number"
-                      label="Amplitude (Peek)"
+                      label="Amplitude (Peak)"
                       size="small"
-                      value={harmonic.amplitudePeek}
-                      inputProps={{ step: calculateStep(harmonic.amplitudePeek), min: 0 }}
+                      value={harmonic.amplitudePeak}
+                      inputProps={{ step: calculateStep(harmonic.amplitudePeak), min: 0 }}
                       onChange={(e) =>
-                        changeAmplitudePeek(index, parseFloat(e.target.value))
+                        changeAmplitudePeak(index, parseFloat(e.target.value))
                       }
                       style={{ maxWidth: "120px", marginTop: "10px", marginRight: '10px' }}
                     />
                     <TextField
                       type="number"
-                      label='Amplitude (RMS)'
+                      label="Amplitude (RMS)"
                       size="small"
                       value={harmonic.amplitudeRMS}
                       inputProps={{ step: calculateStep(harmonic.amplitudeRMS), min: 0 }}
@@ -536,7 +537,7 @@ const WaveformGenerator = () => {
                     />
                     <TextField
                       type="number"
-                      label='Phase Angle (Degree)'
+                      label="Phase Angle (Degree)"
                       size="small"
                       value={harmonic.phaseAngle}
                       inputProps={{ step: calculateStep(harmonic.phaseAngle), min: 0, max: 360 }}
@@ -554,11 +555,9 @@ const WaveformGenerator = () => {
               </Grid>
             </div>
           </Box>
-        </Card>
       </Grid>
 
       <Grid item xs={12} md={6} lg={8}>
-        <Card style={{marginTop: '20px', marginLeft: '10px', marginRight: '10px', marginBottom: '10px', }}>
         
             <Grid style={{display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: '10px', }} >
                 <Plot
@@ -581,10 +580,9 @@ const WaveformGenerator = () => {
                   </Button>
                 </Grid>  
                   <Typography justifyContent='center' style={{wordWrap: 'break-word', marginLeft: '10px'}}>
-                  {window.location.href}
+                  URL: {window.location.href}
                   </Typography>
             </Grid>
-          </Card>
         </Grid>
       </Grid>
   );
