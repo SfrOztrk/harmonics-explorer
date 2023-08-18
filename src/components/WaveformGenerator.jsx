@@ -212,7 +212,7 @@ const WaveformGenerator = () => {
   });
 
   const [layout, setLayout] = useState({
-    title: "Combined Signal",
+    title: "Waveform",
     xaxis: {
       title: "Time (seconds)",
     },
@@ -398,15 +398,14 @@ const WaveformGenerator = () => {
   
   }
 
-  const countUrlAttribute = () => {
+  const countUrlAmpl = () => {
     let count = 0;
 
     for (let i = 1; i <= 200; i++) {
       const a = parseFloat(getQueryParam(`a${i}`)) || 0;
       const ar = parseFloat(getQueryParam(`ar${i}`)) || 0;
-      const p = parseFloat(getQueryParam(`p${i}`)) || 0;
 
-      if (a != 0 || ar != 0 || p != 0) {
+      if (a != 0 || ar != 0) {
         count++;
       }
     }
@@ -423,7 +422,7 @@ const WaveformGenerator = () => {
       img.onload = () => {
 
         let lineHeight = 20;
-        const attrHeight = (countUrlAttribute() + 3) * lineHeight + 10;
+        const attrHeight = (countUrlAmpl() + 3) * lineHeight;
         
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
@@ -438,36 +437,26 @@ const WaveformGenerator = () => {
 
         // Wavefrom Attributes
         let text = "";
-        context.fillStyle = 'blue';
-        text += `Waveform Attributes;  `;
-        context.fillStyle = 'black';
-        text += `Fundamental Frequency: ${parseFloat(getQueryParam("f"))} Hz  `;
-        text += `Number of Cycles: ${parseFloat(getQueryParam("nc"))}  `;
+
+        text += `F: ${parseFloat(getQueryParam("f"))} Hz  `;
+        text += `NC: ${parseFloat(getQueryParam("nc"))}  `;
+
+        const angleSymbol = '\u2220';
+        const degreeSymbol = '\u00B0';
 
         for (let i = 1; i <= 200; i++) {
           const a = parseFloat(getQueryParam(`a${i}`)) || 0;
           const ar = parseFloat(getQueryParam(`ar${i}`)) || 0;
           const p = parseFloat(getQueryParam(`p${i}`)) || 0;
 
-          if (a != 0 || ar != 0 || p != 0) {
-            text += `${i}${ordinalNumberSuffix(i)} Harmonic's `
+          if (a != 0 || ar != 0) {
+            text += `H${i}: `
           }
           if (a != 0) {
-            text += `Peek Amplitude: ${a}`;
-            if (p != 0)
-              text += `, `;
-            else
-            text += `  `;
+            text += `${a / Math.sqrt(2)} ${angleSymbol} ${p}${degreeSymbol}  `;
           }
           if (ar != 0) {
-            text += `RMS Amplitude: ${ar}`;
-            if (p != 0)
-              text += `, `;
-            else 
-              text += `  `;
-          }
-          if (p != 0) {
-            text += `Phase Angle: ${p}°  `;
+            text += `${ar} ${angleSymbol} ${p}${degreeSymbol}  `;
           }
         }
 
@@ -476,16 +465,9 @@ const WaveformGenerator = () => {
         let y = img.height + lineHeight;
 
         lines.forEach((line) => {
-          if (line == lines[0]) {
-            context.fillStyle = 'darkblue';
-            context.fillText(line, 10, y);
-            y += lineHeight;
-          } else {
-            context.fillStyle = 'black';
-            context.fillText(line, 10, y);
-            y += lineHeight;
-          }
-          
+          context.fillStyle = 'black';
+          context.fillText(line, 10, y);
+          y += lineHeight;
         });
 
 
