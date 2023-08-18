@@ -384,6 +384,18 @@ const WaveformGenerator = () => {
     return step;
   };
 
+  const ordinalNumberSuffix = (number) => {
+    if (number % 10 === 1 && number % 100 !== 11)
+      return 'st';
+    if (number % 10 === 2 && number % 100 !== 12)
+      return 'nd';
+    if (number % 10 === 3 && number % 100 !== 13)
+      return 'rd';
+    else
+      return 'th';
+  
+  }
+
   const downloadPlotAsPNG = () => {
     const chartNode = document.querySelector('.js-plotly-plot');
     DomToImage.toPng(chartNode).then((dataUrl) => {
@@ -491,30 +503,11 @@ const WaveformGenerator = () => {
                     key={harmonic.harmonic}
                     style={{ marginTop: "10px" }}
                   >
-                    {harmonic.harmonic % 10 === 1 &&
-                    harmonic.harmonic % 100 !== 11 ? (
-                      <Typography>
-                        {harmonic.harmonic}st Harmonic Frequency:{" "}
-                        {fundamentalFreq * harmonic.harmonic} Hz
-                      </Typography>
-                    ) : harmonic.harmonic % 10 === 2 &&
-                      harmonic.harmonic % 100 !== 12 ? (
-                      <Typography>
-                        {harmonic.harmonic}nd Harmonic Frequency:{" "}
-                        {fundamentalFreq * harmonic.harmonic} Hz
-                      </Typography>
-                    ) : harmonic.harmonic % 10 === 3 &&
-                      harmonic.harmonic % 100 !== 13 ? (
-                      <Typography>
-                        {harmonic.harmonic}rd Harmonic Frequency:{" "}
-                        {fundamentalFreq * harmonic.harmonic} Hz
-                      </Typography>
-                    ) : (
-                      <Typography>
-                        {harmonic.harmonic}th Harmonic Frequency:{" "}
-                        {fundamentalFreq * harmonic.harmonic} Hz
-                      </Typography>
-                    )}
+                    <Typography>
+                      {harmonic.harmonic}{ordinalNumberSuffix(harmonic.harmonic)} Harmonic Frequency:{" "}
+                      {fundamentalFreq * harmonic.harmonic} Hz
+                    </Typography>
+                     
                     <TextField
                       type="number"
                       label="Amplitude (Peak)"
