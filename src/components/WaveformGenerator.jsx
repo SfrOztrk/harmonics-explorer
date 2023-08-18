@@ -155,7 +155,7 @@ const WaveformGenerator = () => {
   const [zeroCross, setZeroCross] = useState(0);
 
   const calculateRMS = (signal) => {
-    const length = signal.length;
+    const length = signal.length / cycles;
     let sum = 0;
 
     signal.forEach((value) => {
