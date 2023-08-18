@@ -189,7 +189,9 @@ const WaveformGenerator = () => {
         zeroCrossings.push(time[i].toFixed(4));
       }
     }
-    zeroCrossings.push((time[signal.length - 1] / cycles).toFixed(4));
+    if (signal[0] == 0 && zeroCrossings[zeroCrossings.length - 1] != (time[signal.length - 1] / cycles).toFixed(4)) {
+      zeroCrossings.push((time[signal.length - 1] / cycles).toFixed(4));
+    }
 
     let zcText = "";
 
@@ -396,22 +398,49 @@ const WaveformGenerator = () => {
   
   }
 
+  const countUrlAttribute = () => {
+    let count = 0;
+
+    for (let i = 1; i <= 200; i++) {
+      const a = parseFloat(getQueryParam(`a${i}`)) || 0;
+      const ar = parseFloat(getQueryParam(`ar${i}`)) || 0;
+      const p = parseFloat(getQueryParam(`p${i}`)) || 0;
+
+      if (a != 0 || ar != 0 || p != 0) {
+        count++;
+      }
+    }
+
+    return count;
+  }
+
+
   const downloadPlotAsPNG = () => {
     const chartNode = document.querySelector('.js-plotly-plot');
     DomToImage.toPng(chartNode).then((dataUrl) => {
       const img = new Image();
       img.src = dataUrl;
       img.onload = () => {
+
+        let lineHeight = 20;
+        const attrHeight = (countUrlAttribute() + 3) * lineHeight + 10;
+        
         const canvas = document.createElement('canvas');
         canvas.width = img.width;
-        canvas.height = img.height + 500;
+        canvas.height = img.height + attrHeight;
 
         const context = canvas.getContext('2d');
+
+        context.fillStyle = 'white';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+
         context.drawImage(img, 0, 0);
 
         // Wavefrom Attributes
         let text = "";
-
+        context.fillStyle = 'blue';
+        text += `Waveform Attributes;  `;
+        context.fillStyle = 'black';
         text += `Fundamental Frequency: ${parseFloat(getQueryParam("f"))} Hz  `;
         text += `Number of Cycles: ${parseFloat(getQueryParam("nc"))}  `;
 
@@ -420,27 +449,43 @@ const WaveformGenerator = () => {
           const ar = parseFloat(getQueryParam(`ar${i}`)) || 0;
           const p = parseFloat(getQueryParam(`p${i}`)) || 0;
 
+          if (a != 0 || ar != 0 || p != 0) {
+            text += `${i}${ordinalNumberSuffix(i)} Harmonic's `
+          }
           if (a != 0) {
-            text += `${i}${ordinalNumberSuffix(i)} Harmonic's Peek Amplitude: ${a}  `;
+            text += `Peek Amplitude: ${a}`;
+            if (p != 0)
+              text += `, `;
+            else
+            text += `  `;
           }
           if (ar != 0) {
-            text += `${i}${ordinalNumberSuffix(i)} Harmonic's RMS Amplitude: ${ar}  `;
+            text += `RMS Amplitude: ${ar}`;
+            if (p != 0)
+              text += `, `;
+            else 
+              text += `  `;
           }
           if (p != 0) {
-            text += `${i}${ordinalNumberSuffix(i)} Harmonic's Phase Angle: ${p}°  `;
+            text += `Phase Angle: ${p}°  `;
           }
         }
 
-        let lineHeight = 20;
-
         const lines = text.split('  ');
         context.font = '16px Arial';
-        context.fillStyle = 'white';
         let y = img.height + lineHeight;
 
         lines.forEach((line) => {
-          context.fillText(line, 10, y);
-          y += lineHeight;
+          if (line == lines[0]) {
+            context.fillStyle = 'darkblue';
+            context.fillText(line, 10, y);
+            y += lineHeight;
+          } else {
+            context.fillStyle = 'black';
+            context.fillText(line, 10, y);
+            y += lineHeight;
+          }
+          
         });
 
 
