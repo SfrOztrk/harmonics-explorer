@@ -182,20 +182,26 @@ const WaveformGenerator = () => {
     const zeroCrossings = [];
 
     if (signal[0] == 0) {
-      zeroCrossings.push(time[0])
+      zeroCrossings.push(time[0].toFixed(4))
     }
-    for (let i = 1; i < signal.length; i++) {
+    for (let i = 1; i < signal.length / cycles; i++) {
       if ((signal[i - 1] < 0 && signal[i] > 0) || (signal[i - 1] > 0 && signal[i] < 0)) {
-        zeroCrossings.push(time[i]);
+        zeroCrossings.push(time[i].toFixed(4));
       }
     }
+    zeroCrossings.push((time[signal.length - 1] / cycles).toFixed(4));
 
-    if (zeroCrossings.length < 2) {
-      return NaN;
-    } else {
-      const zeroCrossingLength = zeroCrossings[1] - zeroCrossings[0];
-      return zeroCrossingLength;
+    let zcText = "";
+
+    for (let j = 0; j < zeroCrossings.length; j++) {
+      if (j == zeroCrossings.length - 1) {
+        zcText += `${zeroCrossings[j]}`
+      } else {
+        zcText += `${zeroCrossings[j]}, `
+      }
     }
+    
+    return zcText;
   };
 
   const [combinedSignalData, setCombinedSignalData] = useState({
@@ -466,7 +472,7 @@ const WaveformGenerator = () => {
               Peak-to-Peak: {peakToPeak.toFixed(2)}
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
-              Zero Cross: {zeroCross.toFixed(3)} seconds
+              Zero Crossing Points: {zeroCross} 
             </Typography>
             <div>
               <Typography variant="h5" style={{ marginTop: "20px" }}>
