@@ -412,8 +412,8 @@ const WaveformGenerator = () => {
         // Wavefrom Attributes
         let text = "";
 
-        text += `freq=${parseFloat(getQueryParam("f"))} `;
-        text += `nc=${parseFloat(getQueryParam("nc"))} `;
+        text += `Fundamental Frequency: ${parseFloat(getQueryParam("f"))} Hz  `;
+        text += `Number of Cycles: ${parseFloat(getQueryParam("nc"))}  `;
 
         for (let i = 1; i <= 200; i++) {
           const a = parseFloat(getQueryParam(`a${i}`)) || 0;
@@ -421,19 +421,28 @@ const WaveformGenerator = () => {
           const p = parseFloat(getQueryParam(`p${i}`)) || 0;
 
           if (a != 0) {
-            text += `a${i}=${a} `;
+            text += `${i}${ordinalNumberSuffix(i)} Harmonic's Peek Amplitude: ${a}  `;
           }
           if (ar != 0) {
-            text += `ar${i}=${ar} `;
+            text += `${i}${ordinalNumberSuffix(i)} Harmonic's RMS Amplitude: ${ar}  `;
           }
           if (p != 0) {
-            text += `p${i}=${p} `;
+            text += `${i}${ordinalNumberSuffix(i)} Harmonic's Phase Angle: ${p}°  `;
           }
         }
 
+        let lineHeight = 20;
+
+        const lines = text.split('  ');
         context.font = '16px Arial';
-        context.fillStyle = 'black';
-        context.fillText(text, 10, img.height - 25);
+        context.fillStyle = 'white';
+        let y = img.height + lineHeight;
+
+        lines.forEach((line) => {
+          context.fillText(line, 10, y);
+          y += lineHeight;
+        });
+
 
         const blob = canvas.toDataURL('image/png');
         saveAs(blob, 'waveform.png')
