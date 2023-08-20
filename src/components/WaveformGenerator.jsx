@@ -413,6 +413,15 @@ const WaveformGenerator = () => {
     return count;
   }
 
+  const engineeringNotation = (number, precision) => {
+    const exp = Math.floor(Math.log10(Math.abs(number)));
+    const base = number / Math.pow(10, exp);
+
+    if (exp > 0)
+      return base.toFixed(precision) + "e+" + exp;
+    return base.toFixed(precision) + "e" + exp;
+  }
+
 
   const downloadPlotAsPNG = () => {
     const chartNode = document.querySelector('.js-plotly-plot');
@@ -438,8 +447,8 @@ const WaveformGenerator = () => {
         // Wavefrom Attributes
         let text = "";
 
-        text += `F: ${parseFloat(getQueryParam("f"))} Hz  `;
-        text += `NC: ${parseFloat(getQueryParam("nc"))}  `;
+        text += `Fundamental Frequency: ${parseFloat(getQueryParam("f"))} Hz  `;
+        text += `Number of Cycles: ${parseFloat(getQueryParam("nc"))}  `;
 
         const angleSymbol = '\u2220';
         const degreeSymbol = '\u00B0';
@@ -450,13 +459,13 @@ const WaveformGenerator = () => {
           const p = parseFloat(getQueryParam(`p${i}`)) || 0;
 
           if (a != 0 || ar != 0) {
-            text += `H${i}: `
+            text += `Harmonic ${i}: `
           }
           if (a != 0) {
-            text += `${a / Math.sqrt(2)} ${angleSymbol} ${p}${degreeSymbol}  `;
+            text += `${engineeringNotation(a / Math.sqrt(2), 2)} ${angleSymbol} ${p}${degreeSymbol}  `;
           }
           if (ar != 0) {
-            text += `${ar} ${angleSymbol} ${p}${degreeSymbol}  `;
+            text += `${engineeringNotation(ar, 2)} ${angleSymbol} ${p}${degreeSymbol}  `;
           }
         }
 
@@ -520,7 +529,7 @@ const WaveformGenerator = () => {
               Peak-to-Peak: {peakToPeak.toFixed(2)}
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
-              Zero Crossing Points: {zeroCross} 
+              Zero Crossing Points (seconds): {zeroCross} 
             </Typography>
             <div>
               <Typography variant="h5" style={{ marginTop: "20px" }}>
