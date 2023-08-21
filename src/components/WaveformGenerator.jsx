@@ -192,14 +192,16 @@ const WaveformGenerator = () => {
     }
 
     if (signal[0] == 0) {
-      zeroCrossings.push(+time[0].toFixed(4));
+      // zeroCrossings.push(+time[0].toFixed(4));
+      zeroCrossings.push(engineeringNotation(time[0], 3));
     }
     for (let i = 1; i < signal.length / cycles; i++) {
       if (
         (signal[i - 1] < 0 && signal[i] > 0) ||
         (signal[i - 1] > 0 && signal[i] < 0)
       ) {
-        zeroCrossings.push(+time[i].toFixed(4));
+        // zeroCrossings.push(+time[i].toFixed(4));
+        zeroCrossings.push(engineeringNotation(time[i], 3));
       }
     }
     if (
@@ -207,7 +209,10 @@ const WaveformGenerator = () => {
       zeroCrossings[zeroCrossings.length - 1] !=
         (time[signal.length - 1] / cycles).toFixed(4)
     ) {
-      zeroCrossings.push(+(time[signal.length - 1] / cycles).toFixed(4));
+      // zeroCrossings.push(+(time[signal.length - 1] / cycles).toFixed(4));
+      zeroCrossings.push(
+        engineeringNotation(time[signal.length - 1] / cycles, 3)
+      );
     }
 
     let zcText = "";
@@ -432,6 +437,7 @@ const WaveformGenerator = () => {
   };
 
   const engineeringNotation = (number, precision) => {
+    if (number == 0) return 0;
     const exp = Math.floor(Math.log10(Math.abs(number)));
     const base = number / Math.pow(10, exp);
 
