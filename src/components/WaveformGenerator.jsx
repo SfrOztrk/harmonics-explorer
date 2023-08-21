@@ -516,7 +516,7 @@ const WaveformGenerator = () => {
     <Grid container spacing={2}>
       <Grid item xs={12} md={6} lg={4}>
         <Box p={2}>
-          <Typography variant="h1" fontSize="32px">
+          <Typography variant="h1" fontSize="32px" style={{ color: "navy" }}>
             Waveform Generator
           </Typography>
           <Grid style={{ display: "flex", flexDirection: "column" }}>
@@ -545,17 +545,48 @@ const WaveformGenerator = () => {
               }}
             />
           </Grid>
-          <Typography variant="h6" style={{ marginTop: "20px" }}>
-            Root Mean Square: {rms.toFixed(3)}
-          </Typography>
-          <Typography variant="h6" style={{ marginTop: "10px" }}>
-            Peak-to-Peak: {peakToPeak.toFixed(2)}
-          </Typography>
-          <Typography variant="h6" style={{ marginTop: "10px" }}>
-            Zero Crossing Points (seconds): {zeroCross}
-          </Typography>
+          <Grid display={"flex"} flexDirection={"row"}>
+            <Typography
+              variant="h6"
+              style={{ marginTop: "20px", color: "darkblue" }}
+            >
+              Root Mean Square:&nbsp;
+            </Typography>
+            <Typography variant="h6" style={{ marginTop: "20px" }}>
+              {engineeringNotation(rms, 3)}
+            </Typography>
+          </Grid>
+
+          <Box display={"flex"} flexDirection={"row"}>
+            <Typography
+              variant="h6"
+              style={{ marginTop: "10px", color: "darkblue" }}
+            >
+              Peak-to-Peak:&nbsp;
+            </Typography>
+            <Typography variant="h6" style={{ marginTop: "10px" }}>
+              {engineeringNotation(peakToPeak, 3)}
+            </Typography>
+          </Box>
+
+          <Grid display={"inline"} flexDirection={"row"}>
+            <Typography
+              variant="h6"
+              style={{ marginTop: "10px", color: "darkblue" }}
+            >
+              Zero Crossing Points (seconds);
+            </Typography>
+
+            <Typography variant="h6" style={{ marginTop: "10px" }}>
+              {zeroCross}
+            </Typography>
+          </Grid>
+
           <div>
-            <Typography variant="h5" style={{ marginTop: "20px" }}>
+            <Typography
+              variant="h5"
+              style={{ marginTop: "20px", color: "darkblue" }}
+            >
               Harmonics:
             </Typography>
             <Grid container spacing={1}>
@@ -586,7 +617,7 @@ const WaveformGenerator = () => {
                     type="number"
                     label="Amplitude (Peak)"
                     size="small"
-                    value={harmonic.amplitudePeak}
+                    value={+harmonic.amplitudePeak.toFixed(3)}
                     inputProps={{
                       step: calculateStep(harmonic.amplitudePeak),
                       min: 0,
@@ -604,7 +635,7 @@ const WaveformGenerator = () => {
                     type="number"
                     label="Amplitude (RMS)"
                     size="small"
-                    value={harmonic.amplitudeRMS}
+                    value={+harmonic.amplitudeRMS.toFixed(3)}
                     inputProps={{
                       step: calculateStep(harmonic.amplitudeRMS),
                       min: 0,
@@ -692,7 +723,11 @@ const WaveformGenerator = () => {
           </Grid>
           <Typography
             justifyContent="center"
-            style={{ wordWrap: "break-word", marginLeft: "10px" }}
+            style={{
+              wordWrap: "break-word",
+              marginLeft: "10px",
+              color: "navy",
+            }}
           >
             URL: {window.location.href}
           </Typography>
