@@ -187,6 +187,10 @@ const WaveformGenerator = () => {
   const findZeroCrossings = (signal, time) => {
     const zeroCrossings = [];
 
+    if (signal.every((element) => element === 0)) {
+      return "";
+    }
+
     if (signal[0] == 0) {
       zeroCrossings.push(time[0].toFixed(4));
     }
