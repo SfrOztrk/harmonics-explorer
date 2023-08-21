@@ -192,14 +192,14 @@ const WaveformGenerator = () => {
     }
 
     if (signal[0] == 0) {
-      zeroCrossings.push(time[0].toFixed(4));
+      zeroCrossings.push(+time[0].toFixed(4));
     }
     for (let i = 1; i < signal.length / cycles; i++) {
       if (
         (signal[i - 1] < 0 && signal[i] > 0) ||
         (signal[i - 1] > 0 && signal[i] < 0)
       ) {
-        zeroCrossings.push(time[i].toFixed(4));
+        zeroCrossings.push(+time[i].toFixed(4));
       }
     }
     if (
@@ -207,7 +207,7 @@ const WaveformGenerator = () => {
       zeroCrossings[zeroCrossings.length - 1] !=
         (time[signal.length - 1] / cycles).toFixed(4)
     ) {
-      zeroCrossings.push((time[signal.length - 1] / cycles).toFixed(4));
+      zeroCrossings.push(+(time[signal.length - 1] / cycles).toFixed(4));
     }
 
     let zcText = "";
