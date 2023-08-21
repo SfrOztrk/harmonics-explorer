@@ -663,7 +663,7 @@ const WaveformGenerator = () => {
               },
             ]}
             layout={layout}
-            config={{ displayModeBar: true, staticPlot: false }}
+            config={{ displayModeBar: false, staticPlot: true }}
           />
           <Grid
             display="flex"
