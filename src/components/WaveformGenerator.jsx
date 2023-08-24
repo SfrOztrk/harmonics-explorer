@@ -9,6 +9,7 @@ import {
 import CopyButton from "./CopyButton";
 import DomToImage from "dom-to-image";
 import { saveAs } from "file-saver";
+import { format, number } from "mathjs";
 
 const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
@@ -21,6 +22,7 @@ const WaveformGenerator = () => {
     { isChange: false },
   ]);
   const [isAmplRmsChange, setIsAmplRmsChange] = useState([{ isChange: false }]);
+  const [zeroCrossUnit, setZeroCrossUnit] = useState("s");
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
@@ -184,6 +186,13 @@ const WaveformGenerator = () => {
     return pp;
   };
 
+  const integerBase = (exp) => {
+    const firstPart = Number(exp.slice(0, exp.indexOf("e")));
+    const secondPart = exp.slice(exp.indexOf("e"), exp.length);
+    const result = firstPart + secondPart;
+    return result;
+  };
+
   const findZeroCrossings = (signal, time) => {
     const zeroCrossings = [];
 
@@ -192,16 +201,26 @@ const WaveformGenerator = () => {
     }
 
     if (signal[0] == 0) {
-      // zeroCrossings.push(+time[0].toFixed(4));
-      zeroCrossings.push(engineeringNotation(time[0], 3));
+      zeroCrossings.push(+time[0].toFixed(3));
     }
     for (let i = 1; i < signal.length / cycles; i++) {
       if (
         (signal[i - 1] < 0 && signal[i] > 0) ||
         (signal[i - 1] > 0 && signal[i] < 0)
       ) {
-        // zeroCrossings.push(+time[i].toFixed(4));
-        zeroCrossings.push(engineeringNotation(time[i], 3));
+        if (
+          calculateExponent(time[i]) <= -4 ||
+          calculateExponent(time[i]) >= 4
+        ) {
+          zeroCrossings.push(
+            integerBase(
+              format(time[i], { notation: "exponential", precision: 3 })
+            )
+          );
+        } else {
+          const t = localization(+time[i], 3);
+          zeroCrossings.push(t);
+        }
       }
     }
     if (
@@ -209,10 +228,16 @@ const WaveformGenerator = () => {
       zeroCrossings[zeroCrossings.length - 1] !=
         (time[signal.length - 1] / cycles).toFixed(4)
     ) {
-      // zeroCrossings.push(+(time[signal.length - 1] / cycles).toFixed(4));
-      zeroCrossings.push(
-        engineeringNotation(time[signal.length - 1] / cycles, 3)
-      );
+      const idx = time[signal.length - 1] / cycles;
+
+      if (calculateExponent(idx) <= -4 || calculateExponent(idx) >= 4) {
+        zeroCrossings.push(
+          integerBase(format(idx, { notation: "exponential", precision: 3 }))
+        );
+      } else {
+        const t = localization(+idx, 3);
+        zeroCrossings.push(t);
+      }
     }
 
     let zcText = "";
@@ -221,7 +246,7 @@ const WaveformGenerator = () => {
       if (j == zeroCrossings.length - 1) {
         zcText += `${zeroCrossings[j]}`;
       } else {
-        zcText += `${zeroCrossings[j]}, `;
+        zcText += `${zeroCrossings[j]} | `;
       }
     }
 
@@ -436,13 +461,13 @@ const WaveformGenerator = () => {
     return count;
   };
 
-  const engineeringNotation = (number, precision) => {
-    if (number == 0) return 0;
-    const exp = Math.floor(Math.log10(Math.abs(number)));
-    const base = number / Math.pow(10, exp);
-
-    if (exp > 0) return +base.toFixed(precision) + "e+" + exp;
-    return +base.toFixed(precision) + "e" + exp;
+  const calculateExponent = (number) => {
+    if (number === 0) {
+      return 0;
+    } else {
+      const exp = Math.floor(Math.log10(Math.abs(number)));
+      return exp;
+    }
   };
 
   const downloadPlotAsPNG = () => {
@@ -486,15 +511,19 @@ const WaveformGenerator = () => {
               text += `Harmonic ${i}: `;
             }
             if (a != 0) {
-              text += `${engineeringNotation(
-                a / Math.sqrt(2),
-                2
+              text += `${integerBase(
+                format(a / Math.sqrt(2), {
+                  notation: "exponential",
+                  precision: 4,
+                })
               )} ${angleSymbol} ${p}${degreeSymbol}  `;
             }
             if (ar != 0) {
-              text += `${engineeringNotation(
-                ar,
-                2
+              text += `${integerBase(
+                format(ar, {
+                  notation: "exponential",
+                  precision: 4,
+                })
               )} ${angleSymbol} ${p}${degreeSymbol}  `;
             }
           }
@@ -516,6 +545,48 @@ const WaveformGenerator = () => {
       .catch((error) => {
         console.log("Error: ", error);
       });
+  };
+
+  const getRootMeanSquare = () => {
+    const exp = calculateExponent(rms);
+    if (exp <= -3 || exp >= 3) {
+      return integerBase(
+        format(rms, {
+          notation: "exponential",
+          precision: 3,
+        })
+      );
+    }
+    const result = +rms.toFixed(2);
+    return localization(result, 2);
+  };
+
+  const getPeakToPeak = () => {
+    const exp = calculateExponent(peakToPeak);
+    if (exp <= -3 || exp >= 3) {
+      return integerBase(
+        format(peakToPeak, {
+          notation: "exponential",
+          precision: 3,
+        })
+      );
+    }
+    const result = +peakToPeak.toFixed(2);
+    return localization(result);
+  };
+
+  const [browserLang, setBrowserLang] = useState(navigator.language);
+
+  const localization = (number, maxFraction) => {
+    if (browserLang != navigator.language) {
+      setBrowserLang(navigator.language);
+    }
+
+    const formatted = new Intl.NumberFormat(browserLang, {
+      maximumFractionDigits: maxFraction,
+    }).format(number);
+
+    return formatted;
   };
 
   return (
@@ -559,7 +630,7 @@ const WaveformGenerator = () => {
               Root Mean Square:&nbsp;
             </Typography>
             <Typography variant="h6" style={{ marginTop: "20px" }}>
-              {engineeringNotation(rms, 3)}
+              {getRootMeanSquare()}
             </Typography>
           </Grid>
 
@@ -571,7 +642,7 @@ const WaveformGenerator = () => {
               Peak-to-Peak:&nbsp;
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
-              {engineeringNotation(peakToPeak, 3)}
+              {getPeakToPeak()}
             </Typography>
           </Box>
 
