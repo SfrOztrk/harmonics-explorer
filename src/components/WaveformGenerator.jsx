@@ -17,12 +17,33 @@ const WaveformGenerator = () => {
     { harmonic: 1, amplitudePeak: 0, amplitudeRMS: 0, phaseAngle: 0 },
   ]);
   const [cycles, setCycles] = useState(5);
-
   const [isAmplPeakChange, setIsAmplPeakChange] = useState([
     { isChange: false },
   ]);
   const [isAmplRmsChange, setIsAmplRmsChange] = useState([{ isChange: false }]);
-  const [zeroCrossUnit, setZeroCrossUnit] = useState("s");
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth,
+    height: window.innerHeight,
+  });
+  const [rms, setRms] = useState(0);
+  const [peakToPeak, setPeakToPeak] = useState(0);
+  const [zeroCross, setZeroCross] = useState(0);
+  const [browserLang, setBrowserLang] = useState(navigator.language);
+  const [combinedSignalData, setCombinedSignalData] = useState({
+    time: [],
+    signal: [],
+  });
+  const [layout, setLayout] = useState({
+    title: "Waveform",
+    xaxis: {
+      title: "Time (seconds)",
+    },
+    yaxis: {
+      title: "Amplitude",
+      range: [0, 0],
+    },
+    autosize: true,
+  });
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
@@ -122,11 +143,6 @@ const WaveformGenerator = () => {
     return { time, signal };
   };
 
-  const [windowSize, setWindowSize] = useState({
-    width: window.innerWidth,
-    height: window.innerHeight,
-  });
-
   const updateWindowDimensions = () => {
     setWindowSize({
       width: window.innerWidth,
@@ -157,10 +173,6 @@ const WaveformGenerator = () => {
 
     return { minSignalValue, maxSignalValue };
   };
-
-  const [rms, setRms] = useState(0);
-  const [peakToPeak, setPeakToPeak] = useState(0);
-  const [zeroCross, setZeroCross] = useState(0);
 
   const calculateRMS = (signal) => {
     const length = signal.length / cycles;
@@ -252,23 +264,6 @@ const WaveformGenerator = () => {
 
     return zcText;
   };
-
-  const [combinedSignalData, setCombinedSignalData] = useState({
-    time: [],
-    signal: [],
-  });
-
-  const [layout, setLayout] = useState({
-    title: "Waveform",
-    xaxis: {
-      title: "Time (seconds)",
-    },
-    yaxis: {
-      title: "Amplitude",
-      range: [0, 0],
-    },
-    autosize: true,
-  });
 
   useEffect(() => {
     if (fundamentalFreq != 0 && cycles > 0) {
@@ -425,6 +420,10 @@ const WaveformGenerator = () => {
     window.history.replaceState({}, "", `?${newUrlSearchParams.toString()}`);
   }, [fundamentalFreq, harmonics, cycles, isAmplPeakChange, isAmplRmsChange]);
 
+  useEffect(() => {
+    setBrowserLang(navigator.language);
+  });
+
   const countDecimalPart = (number) => {
     let decimalPart = (number.toString().split(".")[1] || "").length;
     return decimalPart;
@@ -575,13 +574,7 @@ const WaveformGenerator = () => {
     return localization(result);
   };
 
-  const [browserLang, setBrowserLang] = useState(navigator.language);
-
   const localization = (number, maxFraction) => {
-    if (browserLang != navigator.language) {
-      setBrowserLang(navigator.language);
-    }
-
     const formatted = new Intl.NumberFormat(browserLang, {
       maximumFractionDigits: maxFraction,
     }).format(number);
