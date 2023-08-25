@@ -7,9 +7,11 @@ import {
   FileDownloadOutlined,
 } from "@mui/icons-material";
 import CopyButton from "./CopyButton";
+import SelectLanguage from "./SelectLanguage";
 import DomToImage from "dom-to-image";
 import { saveAs } from "file-saver";
 import { format, number } from "mathjs";
+import { useTranslation } from "react-i18next";
 
 const WaveformGenerator = () => {
   const [fundamentalFreq, setFundamentalFreq] = useState(50);
@@ -29,21 +31,54 @@ const WaveformGenerator = () => {
   const [peakToPeak, setPeakToPeak] = useState(0);
   const [zeroCross, setZeroCross] = useState(0);
   const [browserLang, setBrowserLang] = useState(navigator.language);
+  const [systemLang, setSystemLang] = useState(navigator.language);
   const [combinedSignalData, setCombinedSignalData] = useState({
     time: [],
     signal: [],
   });
+  const [lang, setLang] = useState();
+
+  const { i18n, t } = useTranslation();
+
   const [layout, setLayout] = useState({
-    title: "Waveform",
+    title: t("waveform"),
     xaxis: {
-      title: "Time (seconds)",
+      title: t("time") + " (" + t("sec") + ")",
     },
     yaxis: {
-      title: "Amplitude",
+      title: t("amplitude"),
       range: [0, 0],
     },
     autosize: true,
   });
+
+  const changeLanguage = (langCode) => {
+    i18n.changeLanguage(langCode);
+    setLang(langCode);
+  };
+
+  const changePlotLanguage = () => {
+    setLayout({
+      ...layout,
+      title: t("waveform"),
+      xaxis: {
+        title: t("time") + " (" + t("sec") + ")",
+        range: layout.xaxis.range,
+      },
+      yaxis: { title: t("amplitude"), range: layout.yaxis.range },
+    });
+  };
+
+  const handleChange = (event) => {
+    i18n.changeLanguage(event.target.value);
+    setLang(event.target.value);
+    if (event.target.value == "tr") {
+      setSystemLang("tr-TR");
+    } else {
+      setSystemLang("en-US");
+    }
+    changePlotLanguage();
+  };
 
   const changeFundamentalFrequency = (e) => {
     setFundamentalFreq(e.target.value);
@@ -149,6 +184,14 @@ const WaveformGenerator = () => {
       height: window.innerHeight,
     });
   };
+
+  useEffect(() => {
+    if (navigator.language == "tr") {
+      setLang("Turkish");
+    } else {
+      setLang("English");
+    }
+  });
 
   useEffect(() => {
     window.addEventListener("resize", updateWindowDimensions);
@@ -283,18 +326,25 @@ const WaveformGenerator = () => {
 
       setLayout({
         ...layout,
+        xaxis: {
+          title: t("time") + " (" + t("sec") + ")",
+          range: [
+            combined.signal[0],
+            combined.signal[combinedSignal.length - 1],
+          ],
+        },
         yaxis: {
-          title: "Amplitude",
+          title: t("amplitude"),
           range: [peaks.minSignalValue - 0.5, peaks.maxSignalValue + 0.5],
         },
       });
     } else {
       if (fundamentalFreq == 0) {
-        alert("Fundamental Frequency should be a positive number.");
+        alert(t("freqAlert"));
         setFundamentalFreq(50);
       }
       if (cycles <= 0) {
-        alert("Number of Cycles should be a positive number.");
+        alert(t("cycleAlert"));
         setCycles(5);
       }
     }
@@ -575,7 +625,7 @@ const WaveformGenerator = () => {
   };
 
   const localization = (number, maxFraction) => {
-    const formatted = new Intl.NumberFormat(browserLang, {
+    const formatted = new Intl.NumberFormat(systemLang, {
       maximumFractionDigits: maxFraction,
     }).format(number);
 
@@ -587,12 +637,12 @@ const WaveformGenerator = () => {
       <Grid item xs={12} md={6} lg={4}>
         <Box p={2}>
           <Typography variant="h1" fontSize="32px" style={{ color: "navy" }}>
-            Waveform Generator
+            {t("title")}
           </Typography>
           <Grid style={{ display: "flex", flexDirection: "column" }}>
             <TextField
               type="number"
-              label="Fundamental Frequency (Hz)"
+              label={t("freq") + " (Hz)"}
               size="small"
               step="1"
               value={fundamentalFreq}
@@ -605,7 +655,7 @@ const WaveformGenerator = () => {
             />
             <TextField
               type="number"
-              label="Number of Cycles"
+              label={t("nc")}
               size="small"
               value={cycles}
               onChange={changeCycles}
@@ -615,36 +665,37 @@ const WaveformGenerator = () => {
               }}
             />
           </Grid>
+
           <Grid display={"flex"} flexDirection={"row"}>
             <Typography
               variant="h6"
               style={{ marginTop: "20px", color: "darkblue" }}
             >
-              Root Mean Square:&nbsp;
+              {t("p2p")}:&nbsp;
             </Typography>
             <Typography variant="h6" style={{ marginTop: "20px" }}>
-              {getRootMeanSquare()}
+              {getPeakToPeak()}
             </Typography>
           </Grid>
 
-          <Box display={"flex"} flexDirection={"row"}>
+          <Grid display={"flex"} flexDirection={"row"}>
             <Typography
               variant="h6"
               style={{ marginTop: "10px", color: "darkblue" }}
             >
-              Peak-to-Peak:&nbsp;
+              {t("rms")}:&nbsp;
             </Typography>
             <Typography variant="h6" style={{ marginTop: "10px" }}>
-              {getPeakToPeak()}
+              {getRootMeanSquare()}
             </Typography>
-          </Box>
+          </Grid>
 
           <Grid display={"inline"} flexDirection={"row"}>
             <Typography
               variant="h6"
               style={{ marginTop: "10px", color: "darkblue" }}
             >
-              Zero Crossing Points (seconds);
+              {t("zcp") + " (" + t("sec") + ");"}
             </Typography>
 
             <Typography variant="h6" style={{ marginTop: "10px" }}>
@@ -657,17 +708,20 @@ const WaveformGenerator = () => {
               variant="h5"
               style={{ marginTop: "20px", color: "darkblue" }}
             >
-              Harmonics:
+              {t("harmonics")}:
             </Typography>
             <Grid container spacing={1}>
               <Grid item xs={12} style={{ marginTop: "20px" }}>
                 <Button
                   variant="outlined"
-                  style={{ borderColor: "black", color: "black" }}
+                  style={{
+                    borderColor: "black",
+                    color: "black",
+                  }}
                   startIcon={<AddBoxOutlined />}
                   onClick={addHarmonic}
                 >
-                  Add Harmonic
+                  {t("addHarmonic")}
                 </Button>
               </Grid>
               {harmonics.map((harmonic, index) => (
@@ -679,13 +733,13 @@ const WaveformGenerator = () => {
                 >
                   <Typography>
                     {harmonic.harmonic}
-                    {ordinalNumberSuffix(harmonic.harmonic)} Harmonic Frequency:{" "}
+                    {ordinalNumberSuffix(harmonic.harmonic)} {t("harmFreq")}:{" "}
                     {fundamentalFreq * harmonic.harmonic} Hz
                   </Typography>
 
                   <TextField
                     type="number"
-                    label="Amplitude (Peak)"
+                    label={t("amplitude") + " (" + t("peak") + ")"}
                     size="small"
                     value={+harmonic.amplitudePeak.toFixed(3)}
                     inputProps={{
@@ -703,7 +757,7 @@ const WaveformGenerator = () => {
                   />
                   <TextField
                     type="number"
-                    label="Amplitude (RMS)"
+                    label={t("amplitude") + " (RMS)"}
                     size="small"
                     value={+harmonic.amplitudeRMS.toFixed(3)}
                     inputProps={{
@@ -721,7 +775,7 @@ const WaveformGenerator = () => {
                   />
                   <TextField
                     type="number"
-                    label="Phase Angle (Degree)"
+                    label={t("phaseAngle") + " (" + t("degree") + ")"}
                     size="small"
                     value={harmonic.phaseAngle}
                     inputProps={{
@@ -754,6 +808,15 @@ const WaveformGenerator = () => {
             marginRight: "10px",
           }}
         >
+          <Grid
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "end",
+            }}
+          >
+            <SelectLanguage lang={lang} handleChange={handleChange} />
+          </Grid>
           <Plot
             data={[
               {
@@ -775,6 +838,7 @@ const WaveformGenerator = () => {
               text={window.location.href}
               startIcon={<ContentCopy />}
               style={{ marginLeft: "10px" }}
+              t={t}
             />
             <Button
               variant="outlined"
@@ -788,7 +852,7 @@ const WaveformGenerator = () => {
               }}
               onClick={downloadPlotAsPNG}
             >
-              Export
+              {t("export")}
             </Button>
           </Grid>
           <Typography

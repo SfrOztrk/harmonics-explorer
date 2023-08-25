@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import copy from "clipboard-copy";
 import { Button } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const CopyButton = (props) => {
   const [copied, setCopied] = useState(false);
+  const t = props.t;
 
   const handleCopy = () => {
     copy(props.text);
@@ -23,7 +25,7 @@ const CopyButton = (props) => {
         startIcon={props.startIcon}
         style={props.style}
       >
-        {copied ? "Copied" : "Copy URL"}
+        {copied ? t("copied") : t("copyUrl")}
       </Button>
     </div>
   );
